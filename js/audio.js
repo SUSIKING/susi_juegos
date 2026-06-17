@@ -1,3 +1,5 @@
+import { AUDIO_MASTER_GAIN } from './config.js?v=011';
+
 export class AudioEngine {
   constructor(){
     this.ctx = null;
@@ -15,7 +17,7 @@ export class AudioEngine {
     if(!this.ctx){
       this.ctx = new AC();
       this.master = this.ctx.createGain();
-      this.master.gain.value = 0.055;
+      this.master.gain.value = AUDIO_MASTER_GAIN;
       this.master.connect(this.ctx.destination);
       this.next = this.ctx.currentTime + 0.05;
     }
