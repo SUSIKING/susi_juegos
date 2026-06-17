@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+  <meta name="theme-color" content="#050716" />
+  <title>Ojo Maze</title>
+  <style>
+    :root{color-scheme:dark;--bg:#050716;--panel:#0b1028;--wall:#1267ff;--wall2:#27d7ff;--text:#ecf6ff;--muted:#8aa3c7;--gold:#ffd84d;--danger:#ff4c6a}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:radial-gradient(circle at 50% 10%,#111942 0%,var(--bg) 58%,#02030a 100%);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);touch-action:none;user-select:none}
+    #wrap{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr auto;padding:env(safe-area-inset-top) 10px env(safe-area-inset-bottom);gap:6px}
+    header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;min-height:46px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;font-size:12px;color:var(--muted)}
+    header b{display:block;color:var(--text);font-size:17px;letter-spacing:.02em;text-transform:none}.hudL{text-align:left}.hudC{text-align:center}.hudR{text-align:right}.lives{display:flex;justify-content:flex-end;gap:5px;margin-top:2px}.life{width:13px;height:13px;border:2px solid #fff;border-radius:50%;background:#fff;box-shadow:0 0 7px rgba(255,255,255,.65)}.life.off{background:transparent;opacity:.35;box-shadow:none}.life.low{border-color:var(--danger);background:var(--danger);box-shadow:0 0 10px rgba(255,76,106,.85)}
+    #stage{position:relative;border-radius:18px;overflow:hidden;background:linear-gradient(180deg,rgba(4,8,28,.94),rgba(3,5,18,.98));box-shadow:0 0 0 1px rgba(39,215,255,.18),0 18px 60px rgba(0,0,0,.45)}
+    canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+    footer{height:58px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:12px;letter-spacing:.02em}.pill{border:1px solid rgba(39,215,255,.25);background:rgba(7,14,42,.55);border-radius:999px;padding:8px 13px;box-shadow:inset 0 0 18px rgba(18,103,255,.12)}
+    #overlay{position:absolute;inset:0;display:grid;place-items:center;background:radial-gradient(circle,rgba(6,12,42,.78),rgba(2,3,10,.88));z-index:3;text-align:center;padding:24px}.card{max-width:430px;border:1px solid rgba(39,215,255,.35);background:rgba(7,13,38,.86);border-radius:22px;padding:24px 20px;box-shadow:0 0 40px rgba(18,103,255,.18)}.card h1{margin:0 0 8px;font-size:34px;line-height:1;color:#fff;text-shadow:0 0 18px rgba(39,215,255,.55)}.card p{margin:10px 0;color:#b9c9e6;line-height:1.45}.btn{display:inline-block;margin-top:14px;padding:13px 18px;border-radius:999px;background:linear-gradient(90deg,var(--gold),#fff2a6);color:#171100;font-weight:900;letter-spacing:.02em;box-shadow:0 0 24px rgba(255,216,77,.25)}
+  </style>
+</head>
+<body>
+<div id="wrap">
+  <header>
+    <div class="hudL">Nivel<b id="levelTxt">1</b></div>
+    <div class="hudC">Tiempo<b id="timeTxt">0.00</b></div>
+    <div class="hudR">Vidas<div id="lives" class="lives"></div></div>
+  </header>
+  <main id="stage">
+    <canvas id="game"></canvas>
+    <div id="overlay"><div class="card"><h1>Ojo Maze</h1><p>Llega a la meta en el menor tiempo posible. El joystick es invisible: toca y arrastra en cualquier parte.</p><p>Chocar paredes debilita el ojo. Tienes 5 vidas por intento.</p><div class="btn">Tocar para comenzar</div></div></div>
+  </main>
+  <footer><div class="pill">Arrastra corto = precisión · arrastra largo = velocidad</div></footer>
+</div>
+<script>
+(() => {
+  'use strict';
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const stage = document.getElementById('stage');
+  const overlay = document.getElementById('overlay');
+  const levelTxt = document.getElementById('levelTxt');
+  const timeTxt = document.getElementById('timeTxt');
+  const livesEl = document.getElementById('lives');
+
+  const WALL = 0, PATH = 1;
+  let DPR = 1, W = 0, H = 0, cell = 24, ox = 0, oy = 0;
+  let level = Number(localStorage.getItem('ojoMazeLevel') || 1);
+  let best = JSON.parse(localStorage.getItem('ojoMazeBest') || '{}');
+  let maze, rows, cols, startCell, goalCell, startMs = 0, elapsed = 0, running = false;
+  let player, input, audio, lastT = performance.now();
+
+  const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+  const makeOdd = n => n % 2 ? n : n + 1;
+  const rndFromSeed = seed => { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); };
+  const key = (x,y)=>`${x},${y}`;
+
+  function params(n){
+    const c = 1 - Math.exp(-n / 12);
+    return {
+      c,
+      seed: n * 99991 + 1337,
+      cols: makeOdd(9 + 2 * Math.floor(Math.sqrt(n))),
+      rows: makeOdd(13 + 2 * Math.floor(1.2 * Math.sqrt(n))),
+      loopRate: 0.02 + 0.12 * c,
+      speedMin: 55,
+      speedMax: 165 + 55 * c,
+      wallPenalty: 0.75 + 0.35 * c
+    };
+  }
+
+  function buildMaze(n){
+    const p = params(n), rand = rndFromSeed(p.seed);
+    rows = p.rows; cols = p.cols;
+    const g = Array.from({length:rows},()=>Array(cols).fill(WALL));
+    const stack = [[1,1]]; g[1][1] = PATH;
+    const dirs = [[2,0],[-2,0],[0,2],[0,-2]];
+    while(stack.length){
+      const [x,y] = stack[stack.length-1];
+      const options = dirs.map(([dx,dy])=>[x+dx,y+dy,dx,dy]).filter(([nx,ny])=>nx>0&&ny>0&&nx<cols-1&&ny<rows-1&&g[ny][nx]===WALL);
+      if(!options.length){ stack.pop(); continue; }
+      const [nx,ny,dx,dy] = options[Math.floor(rand()*options.length)];
+      g[y+dy/2][x+dx/2]=PATH; g[ny][nx]=PATH; stack.push([nx,ny]);
+    }
+    for(let y=1;y<rows-1;y++) for(let x=1;x<cols-1;x++){
+      if(g[y][x]===WALL && rand()<p.loopRate){
+        const near = [[1,0],[-1,0],[0,1],[0,-1]].filter(([dx,dy])=>g[y+dy]?.[x+dx]===PATH).length;
+        if(near>=2) g[y][x]=PATH;
+      }
+    }
+    startCell = {x:1,y:1};
+    goalCell = farthest(g, startCell.x, startCell.y);
+    g[goalCell.y][goalCell.x] = PATH;
+    return g;
+  }
+
+  function farthest(g,sx,sy){
+    const q = [[sx,sy,0]], seen = new Set([key(sx,sy)]); let far = {x:sx,y:sy,d:0};
+    for(let i=0;i<q.length;i++){
+      const [x,y,d]=q[i]; if(d>far.d) far={x,y,d};
+      for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+        const nx=x+dx, ny=y+dy, k=key(nx,ny);
+        if(g[ny]?.[nx]===PATH && !seen.has(k)){seen.add(k); q.push([nx,ny,d+1]);}
+      }
+    }
+    return far;
+  }
+
+  function resize(){
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    const r = stage.getBoundingClientRect(); W = r.width; H = r.height;
+    canvas.width = Math.floor(W * DPR); canvas.height = Math.floor(H * DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    fitMaze();
+  }
+
+  function fitMaze(){
+    if(!rows||!cols) return;
+    cell = Math.floor(Math.min(W / cols, H / rows));
+    ox = (W - cell * cols) / 2;
+    oy = (H - cell * rows) / 2;
+  }
+
+  function cellCenter(c){return {x:ox+(c.x+.5)*cell,y:oy+(c.y+.5)*cell};}
+  function isWallAt(px,py){
+    const x = Math.floor((px-ox)/cell), y = Math.floor((py-oy)/cell);
+    return x<0||y<0||x>=cols||y>=rows||maze[y][x]===WALL;
+  }
+  function circleHitsWall(x,y,r){
+    const pts = [[0,0],[r,0],[-r,0],[0,r],[0,-r],[r*.7,r*.7],[-r*.7,r*.7],[r*.7,-r*.7],[-r*.7,-r*.7]];
+    return pts.some(([dx,dy])=>isWallAt(x+dx,y+dy));
+  }
+
+  function newLevel(n){
+    level = n; localStorage.setItem('ojoMazeLevel', String(level));
+    maze = buildMaze(level); fitMaze();
+    const s = cellCenter(startCell);
+    player = {x:s.x,y:s.y,r:cell*.32,dir:{x:0,y:0},wanted:{x:0,y:0},speed:0,lives:5,damageUntil:0,dead:false,penalty:0,blink:0};
+    input = {active:false,id:null,sx:0,sy:0,x:0,y:0,power:0,dir:{x:0,y:0}};
+    startMs = performance.now(); elapsed = 0; running = true;
+    updateHud();
+  }
+
+  function updateHud(){
+    levelTxt.textContent = level;
+    timeTxt.textContent = (elapsed + (player?.penalty||0)).toFixed(2);
+    livesEl.innerHTML='';
+    for(let i=0;i<5;i++){
+      const d=document.createElement('div');
+      d.className='life'+(i>=player.lives?' off':'')+(player.lives===1&&i===0?' low':'');
+      livesEl.appendChild(d);
+    }
+  }
+
+  function dominant(dx,dy){
+    if(Math.hypot(dx,dy)<10) return {x:0,y:0};
+    return Math.abs(dx)>Math.abs(dy) ? {x:Math.sign(dx),y:0} : {x:0,y:Math.sign(dy)};
+  }
+
+  function setPointer(e){
+    const t = e.changedTouches ? e.changedTouches[0] : e;
+    input.x = t.clientX; input.y = t.clientY;
+    const dx = input.x - input.sx, dy = input.y - input.sy;
+    input.power = clamp(Math.hypot(dx,dy)/80,0,1);
+    input.dir = dominant(dx,dy);
+    player.wanted = input.dir;
+  }
+
+  function onDown(e){
+    e.preventDefault(); if(!audio) startAudio(); if(!running){overlay.style.display='none'; newLevel(level);} else overlay.style.display='none';
+    const t = e.changedTouches ? e.changedTouches[0] : e;
+    input.active=true; input.id=t.identifier ?? 'mouse'; input.sx=t.clientX; input.sy=t.clientY; setPointer(e);
+  }
+  function onMove(e){ if(!input?.active) return; e.preventDefault(); setPointer(e); }
+  function onUp(e){ if(!input) return; e.preventDefault(); input.active=false; input.power=0; player.wanted={x:0,y:0}; }
+
+  stage.addEventListener('pointerdown', onDown); stage.addEventListener('pointermove', onMove); stage.addEventListener('pointerup', onUp); stage.addEventListener('pointercancel', onUp);
+  stage.addEventListener('touchstart', onDown, {passive:false}); stage.addEventListener('touchmove', onMove, {passive:false}); stage.addEventListener('touchend', onUp, {passive:false});
+  window.addEventListener('resize', resize);
+
+  function canMove(dir){
+    if(!dir.x&&!dir.y) return false;
+    const nx = player.x + dir.x * cell * .42, ny = player.y + dir.y * cell * .42;
+    return !circleHitsWall(nx,ny,player.r*.9);
+  }
+  function nearCellCenter(){
+    const cx = ox + (Math.floor((player.x-ox)/cell)+.5)*cell;
+    const cy = oy + (Math.floor((player.y-oy)/cell)+.5)*cell;
+    return {ok:Math.abs(player.x-cx)<Math.max(2,cell*.13)&&Math.abs(player.y-cy)<Math.max(2,cell*.13),cx,cy};
+  }
+
+  function update(dt, now){
+    if(!running) return;
+    elapsed = (now - startMs)/1000;
+    const p = params(level);
+    const center = nearCellCenter();
+    if(center.ok){
+      player.x = center.cx; player.y = center.cy;
+      if(canMove(player.wanted)) player.dir = {...player.wanted};
+      else if(!canMove(player.dir)) player.dir = {x:0,y:0};
+    }
+    const pow = input.active ? input.power : Math.max(0, player.speed / p.speedMax - dt*4);
+    const shaped = Math.pow(pow,1.35);
+    player.speed = pow>0 ? p.speedMin + (p.speedMax-p.speedMin)*shaped : 0;
+    const nx = player.x + player.dir.x * player.speed * dt;
+    const ny = player.y + player.dir.y * player.speed * dt;
+    if(!circleHitsWall(nx,ny,player.r)) { player.x=nx; player.y=ny; }
+    else damage(now, p);
+
+    const g = cellCenter(goalCell);
+    if(Math.hypot(player.x-g.x, player.y-g.y) < cell*.45){
+      const finalTime = elapsed + player.penalty;
+      best[level] = Math.min(best[level] || Infinity, finalTime);
+      localStorage.setItem('ojoMazeBest', JSON.stringify(best));
+      newLevel(level+1);
+    }
+    updateHud();
+  }
+
+  function damage(now,p){
+    if(now < player.damageUntil) return;
+    player.lives--; player.penalty += p.wallPenalty; player.damageUntil = now + 650; player.blink = now + 650;
+    player.x -= player.dir.x * cell*.14; player.y -= player.dir.y * cell*.14; player.dir={x:0,y:0};
+    beep(110, .08, 'sawtooth', .05);
+    if(player.lives<=0){
+      running=false;
+      setTimeout(()=>{newLevel(level)}, 450);
+    }
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    drawMaze(); drawGoal(); drawPlayer(); if(input?.active) drawJoystick();
+  }
+  function drawMaze(){
+    ctx.save(); ctx.translate(ox,oy);
+    ctx.lineJoin='round'; ctx.lineCap='round';
+    for(let y=0;y<rows;y++) for(let x=0;x<cols;x++) if(maze[y][x]===WALL){
+      const px=x*cell, py=y*cell;
+      const grad=ctx.createLinearGradient(px,py,px+cell,py+cell); grad.addColorStop(0,'#083cbd'); grad.addColorStop(1,'#1ed6ff');
+      ctx.fillStyle=grad; ctx.shadowColor='rgba(39,215,255,.7)'; ctx.shadowBlur=8;
+      const r=Math.max(4,cell*.18); roundRect(ctx,px+1.2,py+1.2,cell-2.4,cell-2.4,r); ctx.fill();
+      ctx.shadowBlur=0; ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1; ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function drawGoal(){
+    const g=cellCenter(goalCell), t=performance.now()/1000, pulse=1+Math.sin(t*5)*.08;
+    ctx.save(); ctx.translate(g.x,g.y); ctx.scale(pulse,pulse); ctx.shadowColor='rgba(255,216,77,.9)'; ctx.shadowBlur=22;
+    ctx.strokeStyle='#ffd84d'; ctx.lineWidth=Math.max(3,cell*.1); ctx.beginPath(); ctx.arc(0,0,cell*.34,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle='rgba(255,216,77,.18)'; ctx.beginPath(); ctx.arc(0,0,cell*.24,0,Math.PI*2); ctx.fill(); ctx.restore();
+  }
+  function drawPlayer(){
+    const now=performance.now(); if(now<player.blink && Math.floor(now/70)%2===0) return;
+    const look = player.wanted.x||player.wanted.y ? player.wanted : player.dir;
+    const lx=look.x*player.r*.34, ly=look.y*player.r*.34;
+    ctx.save(); ctx.translate(player.x,player.y); ctx.shadowColor=player.lives===1?'rgba(255,76,106,.9)':'rgba(255,255,255,.8)'; ctx.shadowBlur=16;
+    ctx.fillStyle=player.lives===1?'#ffe2e8':'#f8fbff'; ctx.beginPath(); ctx.arc(0,0,player.r,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=8; ctx.fillStyle='#6ee7ff'; ctx.beginPath(); ctx.arc(lx,ly,player.r*.48,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0; ctx.fillStyle='#040611'; ctx.beginPath(); ctx.arc(lx+look.x*player.r*.12,ly+look.y*player.r*.12,player.r*.23,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,.45)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,0,player.r,0,Math.PI*2); ctx.stroke(); ctx.restore();
+  }
+  function drawJoystick(){
+    const dx=input.x-input.sx, dy=input.y-input.sy, a=Math.min(1,Math.hypot(dx,dy)/80);
+    ctx.save(); ctx.globalAlpha=.22; ctx.strokeStyle='#cfefff'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(input.sx,input.sy,80,0,Math.PI*2); ctx.stroke();
+    ctx.globalAlpha=.32+.25*a; ctx.fillStyle='#ffd84d'; ctx.beginPath(); ctx.arc(input.sx+clamp(dx,-80,80),input.sy+clamp(dy,-80,80),18,0,Math.PI*2); ctx.fill(); ctx.restore();
+  }
+  function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+
+  function startAudio(){
+    const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
+    audio = {ctx:new AC(), next:0, step:0, timer:null};
+    audio.master = audio.ctx.createGain(); audio.master.gain.value=.055; audio.master.connect(audio.ctx.destination);
+    audio.next = audio.ctx.currentTime + .05; audio.timer=setInterval(scheduleMusic, 90);
+  }
+  function freq(midi){return 440*Math.pow(2,(midi-69)/12);}
+  function note(midi,t,dur,type='sine',gain=.13){
+    if(!audio) return; const o=audio.ctx.createOscillator(), g=audio.ctx.createGain();
+    o.type=type; o.frequency.value=freq(midi); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(gain,t+.012); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+    o.connect(g); g.connect(audio.master); o.start(t); o.stop(t+dur+.03);
+  }
+  function beep(f,dur,type,gain){ if(!audio) return; const t=audio.ctx.currentTime, o=audio.ctx.createOscillator(), g=audio.ctx.createGain(); o.type=type; o.frequency.value=f; g.gain.value=gain; o.connect(g); g.connect(audio.master); o.start(t); g.gain.exponentialRampToValueAtTime(.001,t+dur); o.stop(t+dur+.02); }
+  function scheduleMusic(){
+    if(!audio) return; const bpm=132, beat=60/bpm, swing=.58;
+    const melody=[62,65,69,72,71,69,67,64,62,65,69,74,72,71,69,67];
+    const bass=[38,38,43,43,36,36,45,45];
+    while(audio.next < audio.ctx.currentTime + .45){
+      const i=audio.step%16, bar=Math.floor(audio.step/4)%4;
+      const dur = beat * (i%2===0 ? swing : 1-swing);
+      if(i%2===0) note(bass[(audio.step/2|0)%bass.length], audio.next, beat*.42, 'triangle', .16);
+      if(i%4===0){
+        const chords=[[62,65,69],[67,71,74],[60,64,67],[57,61,67]][bar];
+        chords.forEach((m,k)=>note(m, audio.next+k*.012, beat*.9, 'sine', .045));
+      }
+      if(i!==6 && i!==14) note(melody[i], audio.next, dur*.72, 'square', .055);
+      audio.next += dur; audio.step++;
+    }
+  }
+
+  function loop(t){ const dt=Math.min(.05,(t-lastT)/1000); lastT=t; update(dt,t); draw(); requestAnimationFrame(loop); }
+  resize(); newLevel(level); running=false; updateHud(); requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
