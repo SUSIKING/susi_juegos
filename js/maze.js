@@ -1,4 +1,4 @@
-import { WALL, PATH, levelParams } from './config.js?v=008';
+import { WALL, PATH, levelParams } from './config.js?v=009';
 
 export function buildMaze(level){
   const params = levelParams(level);
