@@ -1,6 +1,6 @@
-import { APP_VERSION, BUILD_TIMESTAMP_CL, WALL, PATH, STORAGE_KEYS, clamp } from './config.js';
-import { buildMaze } from './maze.js';
-import { AudioEngine } from './audio.js';
+import { APP_VERSION, BUILD_TIMESTAMP_CL, WALL, PATH, STORAGE_KEYS, clamp } from './config.js?v=005';
+import { buildMaze } from './maze.js?v=005';
+import { AudioEngine } from './audio.js?v=005';
 
 export class LaberinOjoGame {
   constructor(){
