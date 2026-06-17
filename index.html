@@ -105,6 +105,7 @@
 
   function fitMaze(){ if(!rows||!cols) return; cell = Math.floor(Math.min(W / cols, H / rows)); ox = (W - cell * cols) / 2; oy = (H - cell * rows) / 2; }
   function cellCenter(c){return {x:ox+(c.x+.5)*cell,y:oy+(c.y+.5)*cell};}
+  function pixelToCell(px,py){return {x:Math.floor((px-ox)/cell),y:Math.floor((py-oy)/cell)};}
   function isWallAt(px,py){ const x = Math.floor((px-ox)/cell), y = Math.floor((py-oy)/cell); return x<0||y<0||x>=cols||y>=rows||maze[y][x]===WALL; }
   function circleHitsWall(x,y,r){ const pts = [[0,0],[r,0],[-r,0],[0,r],[0,-r],[r*.7,r*.7],[-r*.7,r*.7],[r*.7,-r*.7],[-r*.7,-r*.7]]; return pts.some(([dx,dy])=>isWallAt(x+dx,y+dy)); }
 
@@ -128,27 +129,40 @@
     if(fallback){ player.x = fallback.x; player.y = fallback.y; player.safe = [fallback]; }
   }
 
+  function nearbyHealthyCenters(maxDist){
+    const here = pixelToCell(player.x, player.y);
+    const out = [];
+    for(let gy=here.y-2; gy<=here.y+2; gy++) for(let gx=here.x-2; gx<=here.x+2; gx++){
+      if(gx<0||gy<0||gx>=cols||gy>=rows||maze[gy][gx]!==PATH) continue;
+      const c = cellCenter({x:gx,y:gy});
+      const dist = Math.hypot(c.x-player.x, c.y-player.y);
+      if(dist <= maxDist && !circleHitsWall(c.x, c.y, player.r*.92)) out.push({...c, dist, rnd:Math.random()});
+    }
+    return out.sort((a,b)=>a.dist-b.dist || a.rnd-b.rnd);
+  }
+
+  function settleAfterRelocation(){
+    player.dir = {x:0,y:0};
+    player.speed = 0;
+    if(canMove(player.wanted)) player.dir = {...player.wanted};
+    pushSafePosition();
+  }
+
   function teleportPlayer(){
     if(!running || !player) return;
-    const maxDist = player.r * 2;
-    const baseX = player.x, baseY = player.y;
-    for(let i=0;i<34;i++){
-      const a = Math.random() * Math.PI * 2;
-      const d = Math.sqrt(Math.random()) * maxDist;
-      const nx = baseX + Math.cos(a) * d;
-      const ny = baseY + Math.sin(a) * d;
-      if(!circleHitsWall(nx, ny, player.r*.92)){
-        player.x = nx;
-        player.y = ny;
-        player.dir = {x:0,y:0};
-        player.speed = 0;
-        player.teleportUntil = performance.now() + 280;
-        pushSafePosition();
-        beep(660, .05, 'square', .04);
-        return;
-      }
+    const maxDist = player.r * 2.15;
+    const centers = nearbyHealthyCenters(maxDist);
+    if(centers.length){
+      const pick = centers[Math.min(centers.length-1, Math.floor(Math.random()*Math.min(4, centers.length)))];
+      player.x = pick.x;
+      player.y = pick.y;
+      player.teleportUntil = performance.now() + 280;
+      settleAfterRelocation();
+      beep(660, .05, 'square', .04);
+      return;
     }
-    if(circleHitsWall(player.x, player.y, player.r)) rollbackPlayer();
+    rollbackPlayer();
+    settleAfterRelocation();
     player.teleportUntil = performance.now() + 180;
     beep(180, .05, 'sawtooth', .035);
   }
@@ -186,6 +200,7 @@
   function update(dt, now){
     if(!running) return; elapsed = (now - startMs)/1000; const p = params(level); const center = nearCellCenter();
     if(center.ok){ player.x = center.cx; player.y = center.cy; if(!circleHitsWall(player.x, player.y, player.r)) pushSafePosition(); if(canMove(player.wanted)) player.dir = {...player.wanted}; else if(!canMove(player.dir)) player.dir = {x:0,y:0}; }
+    else if(!player.dir.x && !player.dir.y && canMove(player.wanted)) player.dir = {...player.wanted};
     const pow = input.active ? input.power : Math.max(0, player.speed / p.speedMax - dt*4); const shaped = Math.pow(pow,1.35); player.speed = pow>0 ? p.speedMin + (p.speedMax-p.speedMin)*shaped : 0;
     const nx = player.x + player.dir.x * player.speed * dt, ny = player.y + player.dir.y * player.speed * dt;
     if(!circleHitsWall(nx,ny,player.r)) { player.x=nx; player.y=ny; pushSafePosition(); } else damage(now, p);
