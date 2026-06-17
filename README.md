@@ -9,12 +9,13 @@ Controlas un ojo circular dentro de laberintos ortogonales estáticos. El objeti
 ## Versión actual
 
 ```text
-v0.0.0.5 · 2026-06-17 07:39 CLT
+v0.0.0.6 · 2026-06-17 07:48 CLT
 ```
 
 ## Mecánicas actuales
 
 - Joystick invisible: toca y arrastra en cualquier parte de la pantalla.
+- Cruceta táctil fija para compatibilidad con WebViews como Instagram.
 - Velocidad variable: arrastre corto para precisión, arrastre largo para máxima velocidad.
 - Movimiento ortogonal inspirado en juegos arcade de laberinto.
 - Laberintos infinitos generados por semilla determinística.
@@ -53,7 +54,7 @@ susi_juegos/
 | Archivo | Función |
 |---|---|
 | `index.html` | Entrada principal para GitHub Pages. |
-| `css/styles.css` | Estética visual, HUD, overlay, botón rojo y layout mobile-first. |
+| `css/styles.css` | Estética visual, HUD, overlay, cruceta, botón rojo y layout mobile-first. |
 | `js/main.js` | Bootstrap del juego. |
 | `js/game.js` | Motor principal: input, movimiento, colisión, daño, HUD, render y teletransporte. |
 | `js/maze.js` | Generación de laberintos por semilla. |
@@ -65,10 +66,11 @@ susi_juegos/
 
 1. Abre `index.html` o la URL publicada en GitHub Pages.
 2. Toca la pantalla para comenzar.
-3. Arrastra en cualquier dirección para mover el ojo.
-4. Usa el botón rojo si necesitas un teletransporte corto de emergencia.
-5. Llega al portal amarillo.
-6. Intenta reducir tu tiempo final.
+3. Usa la cruceta para moverte si estás en Instagram o un WebView.
+4. También puedes arrastrar en cualquier dirección para mover el ojo.
+5. Usa el botón rojo si necesitas un teletransporte corto de emergencia.
+6. Llega al portal amarillo.
+7. Intenta reducir tu tiempo final.
 
 ## Publicación recomendada
 
