@@ -1,8 +1,10 @@
-export const APP_VERSION = 'v0.0.1.0';
-export const BUILD_TIMESTAMP_CL = '2026-06-17 08:31 CLT';
+export const APP_VERSION = 'v0.0.1.1';
+export const BUILD_TIMESTAMP_CL = '2026-06-17 08:42 CLT';
 
 export const WALL = 0;
 export const PATH = 1;
+
+export const AUDIO_MASTER_GAIN = 0.5;
 
 export const STORAGE_KEYS = {
   level: 'laberinOjoLevel',
