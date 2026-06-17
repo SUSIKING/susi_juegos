@@ -9,7 +9,7 @@ Controlas un ojo circular dentro de laberintos ortogonales estáticos. El objeti
 ## Versión actual
 
 ```text
-v0.0.0.4 · 2026-06-17 07:31 CLT
+v0.0.0.5 · 2026-06-17 07:39 CLT
 ```
 
 ## Mecánicas actuales
@@ -27,6 +27,8 @@ v0.0.0.4 · 2026-06-17 07:31 CLT
 - Música procedural simple con Web Audio API, activada por el primer toque.
 - Música configurada a 75 BPM y transposición total de -6 semitonos.
 - Compatibilidad móvil reforzada para WebViews como Instagram.
+- Cada carga nueva limpia el progreso local y parte desde nivel 1.
+- CSS/JS usan cache-busting por versión para reducir caché agresivo en WebViews.
 
 ## Estructura del repo
 
