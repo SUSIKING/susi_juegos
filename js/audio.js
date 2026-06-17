@@ -5,23 +5,34 @@ export class AudioEngine {
     this.next = 0;
     this.step = 0;
     this.timer = null;
+    this.started = false;
   }
 
-  start(){
-    if(this.ctx) return;
+  async start(){
     const AC = window.AudioContext || window.webkitAudioContext;
     if(!AC) return;
 
-    this.ctx = new AC();
-    this.master = this.ctx.createGain();
-    this.master.gain.value = 0.055;
-    this.master.connect(this.ctx.destination);
-    this.next = this.ctx.currentTime + 0.05;
-    this.timer = setInterval(() => this.scheduleMusic(), 90);
+    if(!this.ctx){
+      this.ctx = new AC();
+      this.master = this.ctx.createGain();
+      this.master.gain.value = 0.055;
+      this.master.connect(this.ctx.destination);
+      this.next = this.ctx.currentTime + 0.05;
+    }
+
+    if(this.ctx.state === 'suspended'){
+      try { await this.ctx.resume(); } catch (err) {}
+    }
+
+    if(!this.started){
+      this.started = true;
+      this.timer = setInterval(() => this.scheduleMusic(), 90);
+      this.beep(420, 0.035, 'sine', 0.025);
+    }
   }
 
   beep(freq, duration, type = 'sine', gain = 0.04){
-    if(!this.ctx) return;
+    if(!this.ctx || this.ctx.state !== 'running') return;
     const t = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const amp = this.ctx.createGain();
@@ -36,7 +47,7 @@ export class AudioEngine {
   }
 
   note(midi, t, duration, type = 'sine', gain = 0.13){
-    if(!this.ctx) return;
+    if(!this.ctx || this.ctx.state !== 'running') return;
     const osc = this.ctx.createOscillator();
     const amp = this.ctx.createGain();
     osc.type = type;
@@ -51,7 +62,7 @@ export class AudioEngine {
   }
 
   scheduleMusic(){
-    if(!this.ctx) return;
+    if(!this.ctx || this.ctx.state !== 'running') return;
 
     const bpm = 75;
     const transpose = -6;
