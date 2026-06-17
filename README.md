@@ -9,7 +9,7 @@ Controlas un ojo circular dentro de laberintos ortogonales estáticos. El objeti
 ## Versión actual
 
 ```text
-v0.0.0.8 · 2026-06-17 08:07 CLT
+v0.0.0.9 · 2026-06-17 08:18 CLT
 ```
 
 ## Regla obligatoria de versionado
@@ -17,13 +17,19 @@ v0.0.0.8 · 2026-06-17 08:07 CLT
 Cada cambio del juego debe incrementar la versión secuencialmente:
 
 ```text
-v0.0.0.8 → v0.0.0.9 → v0.0.1.0 → v0.0.1.1
+v0.0.0.9 → v0.0.1.0 → v0.0.1.1 → v0.0.1.2
 ```
 
 La regla está automatizada con:
 
 ```bash
 npm run bump
+```
+
+Las reglas completas están en:
+
+```text
+CORE_RULES.md
 ```
 
 El script actualiza:
@@ -34,6 +40,7 @@ El script actualiza:
 - `js/game.js`
 - `js/maze.js`
 - `README.md`
+- `package.json`
 - cache keys `?v=XXX`
 - timestamp en zona horaria Chile
 
@@ -61,6 +68,7 @@ El script actualiza:
 
 ```text
 susi_juegos/
+├── CORE_RULES.md
 ├── index.html
 ├── css/
 │   └── styles.css
@@ -82,6 +90,7 @@ susi_juegos/
 
 | Archivo | Función |
 |---|---|
+| `CORE_RULES.md` | Reglas obligatorias del proyecto. |
 | `index.html` | Entrada principal para GitHub Pages. |
 | `css/styles.css` | Estética visual, HUD, overlay, cruceta, botón rojo y layout mobile-first. |
 | `js/main.js` | Bootstrap del juego. |
