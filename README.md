@@ -46,7 +46,8 @@ El script actualiza:
 
 ## Mecánicas actuales
 
-- Movimiento simplificado por grilla: cada input mueve el ojo al centro de una celda vecina válida.
+- Movimiento lógico por grilla: cada input mueve el ojo a una celda vecina válida.
+- Render suavizado: el ojo interpola visualmente entre centros de celda para recuperar fluidez.
 - Joystick/arrastre traducido a pasos por dirección.
 - Cruceta táctil fija para compatibilidad con WebViews como Instagram.
 - Laberintos infinitos generados por semilla determinística.
@@ -58,6 +59,7 @@ El script actualiza:
 - El teletransporte puede saltar muros si el destino sano cabe dentro del rango.
 - Música procedural simple con Web Audio API, activada por el primer toque.
 - Música configurada a 75 BPM y transposición total de -6 semitonos.
+- Audio robustecido con `AudioContext.resume()` en gestos de usuario.
 - Cada carga nueva limpia el progreso local y parte desde nivel 1.
 - CSS/JS usan cache-busting por versión para reducir caché agresivo en WebViews.
 
@@ -91,9 +93,9 @@ susi_juegos/
 | `index.html` | Entrada principal para GitHub Pages. |
 | `css/styles.css` | Estética visual, HUD, overlay, cruceta, botón rojo y layout mobile-first. |
 | `js/main.js` | Bootstrap del juego. |
-| `js/game.js` | Motor principal: input, movimiento por grilla, daño, HUD, render y teletransporte. |
+| `js/game.js` | Motor principal: input, movimiento por grilla, interpolación visual, daño, HUD, render y teletransporte. |
 | `js/maze.js` | Generación de laberintos por semilla. |
-| `js/audio.js` | Música procedural y efectos sonoros. |
+| `js/audio.js` | Música procedural, efectos sonoros y reanudación del contexto de audio. |
 | `js/config.js` | Versión, timestamp, constantes, dificultad y utilidades. |
 | `scripts/bump-version.mjs` | Incrementa versión, timestamp y cache keys. |
 | `apps-script-ranking.gs` | Backend opcional para ranking global con Google Sheets. |
