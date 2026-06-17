@@ -9,7 +9,7 @@ Controlas un ojo circular dentro de laberintos ortogonales estáticos. El objeti
 ## Versión actual
 
 ```text
-v0.0.0.9 · 2026-06-17 08:18 CLT
+v0.0.1.0 · 2026-06-17 08:31 CLT
 ```
 
 ## Regla obligatoria de versionado
@@ -17,7 +17,7 @@ v0.0.0.9 · 2026-06-17 08:18 CLT
 Cada cambio del juego debe incrementar la versión secuencialmente:
 
 ```text
-v0.0.0.9 → v0.0.1.0 → v0.0.1.1 → v0.0.1.2
+v0.0.1.0 → v0.0.1.1 → v0.0.1.2 → v0.0.1.3
 ```
 
 La regla está automatizada con:
@@ -46,21 +46,18 @@ El script actualiza:
 
 ## Mecánicas actuales
 
-- Joystick invisible: toca y arrastra en cualquier parte de la pantalla.
+- Movimiento simplificado por grilla: cada input mueve el ojo al centro de una celda vecina válida.
+- Joystick/arrastre traducido a pasos por dirección.
 - Cruceta táctil fija para compatibilidad con WebViews como Instagram.
-- Cruceta en modo persistente: tocar una dirección mantiene el movimiento hasta tocar otra.
-- Velocidad variable: arrastre corto para precisión, arrastre largo para máxima velocidad.
-- Movimiento ortogonal inspirado en juegos arcade de laberinto.
 - Laberintos infinitos generados por semilla determinística.
 - Dificultad creciente por tamaño, complejidad y penalización.
 - 5 vidas por intento.
-- Chocar paredes resta vida y suma penalización de tiempo.
+- Intentar moverse contra pared resta vida y suma penalización de tiempo.
 - Al morir, el nivel se reinicia y las vidas se recuperan.
 - Botón rojo de teletransporte de emergencia.
 - El teletransporte puede saltar muros si el destino sano cabe dentro del rango.
 - Música procedural simple con Web Audio API, activada por el primer toque.
 - Música configurada a 75 BPM y transposición total de -6 semitonos.
-- Compatibilidad móvil reforzada para WebViews como Instagram.
 - Cada carga nueva limpia el progreso local y parte desde nivel 1.
 - CSS/JS usan cache-busting por versión para reducir caché agresivo en WebViews.
 
@@ -94,7 +91,7 @@ susi_juegos/
 | `index.html` | Entrada principal para GitHub Pages. |
 | `css/styles.css` | Estética visual, HUD, overlay, cruceta, botón rojo y layout mobile-first. |
 | `js/main.js` | Bootstrap del juego. |
-| `js/game.js` | Motor principal: input, movimiento, colisión, daño, HUD, render y teletransporte. |
+| `js/game.js` | Motor principal: input, movimiento por grilla, daño, HUD, render y teletransporte. |
 | `js/maze.js` | Generación de laberintos por semilla. |
 | `js/audio.js` | Música procedural y efectos sonoros. |
 | `js/config.js` | Versión, timestamp, constantes, dificultad y utilidades. |
@@ -105,12 +102,11 @@ susi_juegos/
 
 1. Abre `index.html` o la URL publicada en GitHub Pages.
 2. Toca la pantalla para comenzar.
-3. En Instagram, toca una flecha de la cruceta para fijar dirección.
-4. Toca otra flecha para cambiar dirección.
-5. También puedes arrastrar en cualquier dirección para mover el ojo.
-6. Usa el botón rojo si necesitas un teletransporte corto de emergencia.
-7. Llega al portal amarillo.
-8. Intenta reducir tu tiempo final.
+3. Usa una flecha de la cruceta para mover una celda.
+4. También puedes arrastrar en cualquier dirección para avanzar por pasos.
+5. Usa el botón rojo si necesitas un teletransporte corto de emergencia.
+6. Llega al portal amarillo.
+7. Intenta reducir tu tiempo final.
 
 ## Publicación recomendada
 
