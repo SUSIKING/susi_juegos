@@ -7,7 +7,8 @@ const FILES = {
   main: 'js/main.js',
   game: 'js/game.js',
   maze: 'js/maze.js',
-  readme: 'README.md'
+  readme: 'README.md',
+  packageJson: 'package.json'
 };
 
 const now = new Date();
@@ -52,10 +53,13 @@ function versionString(parts){
   return `v${parts.join('.')}`;
 }
 
+function bareVersion(version){
+  return version.replace(/^v/, '');
+}
+
 function cacheKey(version){
-  const last = version.split('.').at(-1);
-  const numeric = version.replace(/^v/, '').split('.').join('');
-  return numeric.padStart(3, '0').slice(-3) || last.padStart(3, '0');
+  const numeric = bareVersion(version).split('.').join('');
+  return numeric.padStart(3, '0').slice(-3);
 }
 
 function chileTimestamp(){
@@ -89,6 +93,7 @@ replaceOrThrow(FILES.game, /audio\.js\?v=\d+/g, `audio.js?v=${key}`);
 replaceOrThrow(FILES.maze, /config\.js\?v=\d+/g, `config.js?v=${key}`);
 
 replaceOrThrow(FILES.readme, /v\d+\.\d+\.\d+\.\d+ · \d{4}-\d{2}-\d{2} \d{2}:\d{2} CLT/, `${next} · ${timestamp}`);
+replaceOrThrow(FILES.packageJson, /"version"\s*:\s*"\d+\.\d+\.\d+\.\d+"/, `"version": "${bareVersion(next)}"`);
 
 console.log(`Version bumped: ${current} -> ${next}`);
 console.log(`Cache key: ${key}`);
