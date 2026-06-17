@@ -193,8 +193,21 @@
   function note(midi,t,dur,type='sine',gain=.13){ if(!audio) return; const o=audio.ctx.createOscillator(), g=audio.ctx.createGain(); o.type=type; o.frequency.value=freq(midi); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(gain,t+.012); g.gain.exponentialRampToValueAtTime(.001,t+dur); o.connect(g); g.connect(audio.master); o.start(t); o.stop(t+dur+.03); }
   function beep(f,dur,type,gain){ if(!audio) return; const t=audio.ctx.currentTime, o=audio.ctx.createOscillator(), g=audio.ctx.createGain(); o.type=type; o.frequency.value=f; g.gain.value=gain; o.connect(g); g.connect(audio.master); o.start(t); g.gain.exponentialRampToValueAtTime(.001,t+dur); o.stop(t+dur+.02); }
   function scheduleMusic(){
-    if(!audio) return; const bpm=132, beat=60/bpm, swing=.58; const melody=[62,65,69,72,71,69,67,64,62,65,69,74,72,71,69,67]; const bass=[38,38,43,43,36,36,45,45];
-    while(audio.next < audio.ctx.currentTime + .45){ const i=audio.step%16, bar=Math.floor(audio.step/4)%4; const dur = beat * (i%2===0 ? swing : 1-swing); if(i%2===0) note(bass[(audio.step/2|0)%bass.length], audio.next, beat*.42, 'triangle', .16); if(i%4===0){ const chords=[[62,65,69],[67,71,74],[60,64,67],[57,61,67]][bar]; chords.forEach((m,k)=>note(m, audio.next+k*.012, beat*.9, 'sine', .045)); } if(i!==6 && i!==14) note(melody[i], audio.next, dur*.72, 'square', .055); audio.next += dur; audio.step++; }
+    if(!audio) return;
+    const bpm=90, transpose=-4, beat=60/bpm, swing=.58;
+    const melody=[62,65,69,72,71,69,67,64,62,65,69,74,72,71,69,67];
+    const bass=[38,38,43,43,36,36,45,45];
+    while(audio.next < audio.ctx.currentTime + .45){
+      const i=audio.step%16, bar=Math.floor(audio.step/4)%4;
+      const dur = beat * (i%2===0 ? swing : 1-swing);
+      if(i%2===0) note(bass[(audio.step/2|0)%bass.length] + transpose, audio.next, beat*.42, 'triangle', .16);
+      if(i%4===0){
+        const chords=[[62,65,69],[67,71,74],[60,64,67],[57,61,67]][bar];
+        chords.forEach((m,k)=>note(m + transpose, audio.next+k*.012, beat*.9, 'sine', .045));
+      }
+      if(i!==6 && i!==14) note(melody[i] + transpose, audio.next, dur*.72, 'square', .055);
+      audio.next += dur; audio.step++;
+    }
   }
 
   function loop(t){ const dt=Math.min(.05,(t-lastT)/1000); lastT=t; update(dt,t); draw(); requestAnimationFrame(loop); }
