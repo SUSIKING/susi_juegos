@@ -9,7 +9,7 @@ Controlas un ojo circular dentro de laberintos ortogonales estáticos. El objeti
 ## Versión actual
 
 ```text
-v0.0.0.3 · 2026-06-17 07:20 CLT
+v0.0.0.4 · 2026-06-17 07:31 CLT
 ```
 
 ## Mecánicas actuales
@@ -26,6 +26,7 @@ v0.0.0.3 · 2026-06-17 07:20 CLT
 - El teletransporte puede saltar muros si el destino sano cabe dentro del rango.
 - Música procedural simple con Web Audio API, activada por el primer toque.
 - Música configurada a 75 BPM y transposición total de -6 semitonos.
+- Compatibilidad móvil reforzada para WebViews como Instagram.
 
 ## Estructura del repo
 
