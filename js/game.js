@@ -101,6 +101,10 @@ export class LaberinOjoGame {
     this.player.cellY = safeCell.y;
     this.player.x = center.x;
     this.player.y = center.y;
+    this.player.renderX = center.x;
+    this.player.renderY = center.y;
+    this.player.targetX = center.x;
+    this.player.targetY = center.y;
     this.player.r = this.cell * .32;
   }
 
@@ -130,6 +134,10 @@ export class LaberinOjoGame {
       cellY:this.startCell.y,
       x:start.x,
       y:start.y,
+      renderX:start.x,
+      renderY:start.y,
+      targetX:start.x,
+      targetY:start.y,
       r:this.cell * .32,
       dir:{x:0,y:0},
       wanted:{x:0,y:0},
@@ -149,10 +157,6 @@ export class LaberinOjoGame {
 
   cellCenter(c){
     return { x:this.ox + (c.x + .5) * this.cell, y:this.oy + (c.y + .5) * this.cell };
-  }
-
-  pixelToCell(px, py){
-    return { x:Math.floor((px - this.ox) / this.cell), y:Math.floor((py - this.oy) / this.cell) };
   }
 
   isPathCell(x, y){
@@ -192,7 +196,7 @@ export class LaberinOjoGame {
 
     const now = performance.now();
     if(!force && now < this.stepCooldownUntil) return false;
-    this.stepCooldownUntil = now + 115;
+    this.stepCooldownUntil = now + 105;
 
     this.setLook(dir);
 
@@ -209,6 +213,8 @@ export class LaberinOjoGame {
     const c = this.cellCenter({x:nx, y:ny});
     this.player.x = c.x;
     this.player.y = c.y;
+    this.player.targetX = c.x;
+    this.player.targetY = c.y;
 
     this.checkGoal();
     return true;
@@ -291,6 +297,10 @@ export class LaberinOjoGame {
     this.player.cellY = pick.y;
     this.player.x = c.x;
     this.player.y = c.y;
+    this.player.renderX = c.x;
+    this.player.renderY = c.y;
+    this.player.targetX = c.x;
+    this.player.targetY = c.y;
     this.player.teleportUntil = performance.now() + 280;
     this.audio.beep(660, .05, 'square', .04);
     this.checkGoal();
@@ -321,6 +331,14 @@ export class LaberinOjoGame {
   update(dt, now){
     if(!this.running) return;
     this.elapsed = (now - this.startMs) / 1000;
+
+    const k = 1 - Math.pow(0.001, dt * 14);
+    this.player.renderX += (this.player.targetX - this.player.renderX) * k;
+    this.player.renderY += (this.player.targetY - this.player.renderY) * k;
+
+    if(Math.abs(this.player.targetX - this.player.renderX) < 0.3) this.player.renderX = this.player.targetX;
+    if(Math.abs(this.player.targetY - this.player.renderY) < 0.3) this.player.renderY = this.player.targetY;
+
     this.updateHud();
   }
 
@@ -406,7 +424,7 @@ export class LaberinOjoGame {
 
     if(now < this.player.teleportUntil){
       ctx.save();
-      ctx.translate(this.player.x, this.player.y);
+      ctx.translate(this.player.renderX, this.player.renderY);
       ctx.globalAlpha = .75;
       ctx.strokeStyle = '#ff4c6a';
       ctx.lineWidth = 3;
@@ -418,7 +436,7 @@ export class LaberinOjoGame {
     }
 
     ctx.save();
-    ctx.translate(this.player.x, this.player.y);
+    ctx.translate(this.player.renderX, this.player.renderY);
     ctx.shadowColor = this.player.lives === 1 ? 'rgba(255,76,106,.9)' : 'rgba(255,255,255,.8)';
     ctx.shadowBlur = 16;
     ctx.fillStyle = this.player.lives === 1 ? '#ffe2e8' : '#f8fbff';
