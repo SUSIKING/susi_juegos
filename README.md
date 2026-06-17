@@ -9,7 +9,7 @@ Controlas un ojo circular dentro de laberintos ortogonales estáticos. El objeti
 ## Versión actual
 
 ```text
-v0.0.0.1 · 2026-06-17 07:04 CLT
+v0.0.0.2 · 2026-06-17 07:14 CLT
 ```
 
 ## Mecánicas actuales
