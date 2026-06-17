@@ -1,6 +1,6 @@
-import { APP_VERSION, BUILD_TIMESTAMP_CL, WALL, PATH, STORAGE_KEYS, clamp } from './config.js?v=007';
-import { buildMaze } from './maze.js?v=007';
-import { AudioEngine } from './audio.js?v=007';
+import { APP_VERSION, BUILD_TIMESTAMP_CL, WALL, PATH, STORAGE_KEYS, clamp } from './config.js?v=008';
+import { buildMaze } from './maze.js?v=008';
+import { AudioEngine } from './audio.js?v=008';
 
 export class LaberinOjoGame {
   constructor(){
@@ -113,17 +113,7 @@ export class LaberinOjoGame {
   onMove(e){ if(!this.input?.active || this.input.mode!=='drag') return; e.preventDefault(); this.setPointer(e); }
   onUp(e){ if(!this.input) return; e.preventDefault(); if(this.input.mode==='drag'){ this.input.active=false; this.input.power=0; this.player.wanted={x:0,y:0}; this.input.mode='none'; } }
 
-  setDpadDirection(dir, btn){
-    this.dpad?.querySelectorAll('.dpadBtn').forEach(b => b.classList.remove('pressed'));
-    btn?.classList.add('pressed');
-    this.input.active = true;
-    this.input.mode = 'dpad';
-    this.input.power = 1;
-    this.input.dir = dir;
-    this.player.wanted = dir;
-    if(this.canMove(dir)) this.player.dir = { ...dir };
-  }
-
+  setDpadDirection(dir, btn){ this.dpad?.querySelectorAll('.dpadBtn').forEach(b => b.classList.remove('pressed')); btn?.classList.add('pressed'); this.input.active = true; this.input.mode = 'dpad'; this.input.power = 1; this.input.dir = dir; this.player.wanted = dir; if(this.canMove(dir)) this.player.dir = { ...dir }; }
   onDpadDown(e,btn){ e.preventDefault(); e.stopPropagation(); this.startGameIfNeeded(); this.setDpadDirection(this.dirFromName(btn.dataset.dir), btn); }
   onTeleportPress(e){ e.preventDefault(); e.stopPropagation(); this.audio.start(); this.teleportPlayer(); }
 
