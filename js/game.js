@@ -34,36 +34,77 @@ export class LaberinOjoGame {
     this.newLevel(this.level);
     this.running = false;
     this.updateHud();
+    this.deferStartupResize();
     requestAnimationFrame(t => this.loop(t));
   }
 
   bindEvents(){
-    this.stage.addEventListener('pointerdown', e => this.onDown(e));
-    this.stage.addEventListener('pointermove', e => this.onMove(e));
-    this.stage.addEventListener('pointerup', e => this.onUp(e));
-    this.stage.addEventListener('pointercancel', e => this.onUp(e));
-    this.stage.addEventListener('touchstart', e => this.onDown(e), { passive:false });
-    this.stage.addEventListener('touchmove', e => this.onMove(e), { passive:false });
-    this.stage.addEventListener('touchend', e => this.onUp(e), { passive:false });
-    this.teleportBtn.addEventListener('pointerdown', e => this.onTeleportPress(e));
-    this.teleportBtn.addEventListener('touchstart', e => this.onTeleportPress(e), { passive:false });
-    window.addEventListener('resize', () => this.resize());
+    if(window.PointerEvent){
+      this.stage.addEventListener('pointerdown', e => this.onDown(e));
+      this.stage.addEventListener('pointermove', e => this.onMove(e));
+      this.stage.addEventListener('pointerup', e => this.onUp(e));
+      this.stage.addEventListener('pointercancel', e => this.onUp(e));
+      this.teleportBtn.addEventListener('pointerdown', e => this.onTeleportPress(e));
+    } else {
+      this.stage.addEventListener('touchstart', e => this.onDown(e), { passive:false });
+      this.stage.addEventListener('touchmove', e => this.onMove(e), { passive:false });
+      this.stage.addEventListener('touchend', e => this.onUp(e), { passive:false });
+      this.stage.addEventListener('mousedown', e => this.onDown(e));
+      this.stage.addEventListener('mousemove', e => this.onMove(e));
+      this.stage.addEventListener('mouseup', e => this.onUp(e));
+      this.teleportBtn.addEventListener('touchstart', e => this.onTeleportPress(e), { passive:false });
+      this.teleportBtn.addEventListener('mousedown', e => this.onTeleportPress(e));
+    }
+
+    window.addEventListener('resize', () => this.recenterAfterResize());
+    window.addEventListener('orientationchange', () => setTimeout(() => this.recenterAfterResize(), 120));
+    document.addEventListener('visibilitychange', () => { if(!document.hidden) this.recenterAfterResize(); });
+  }
+
+  deferStartupResize(){
+    requestAnimationFrame(() => this.recenterAfterResize());
+    setTimeout(() => this.recenterAfterResize(), 120);
+    setTimeout(() => this.recenterAfterResize(), 450);
   }
 
   resize(){
     this.dpr = Math.min(2, window.devicePixelRatio || 1);
     const rect = this.stage.getBoundingClientRect();
-    this.viewW = rect.width;
-    this.viewH = rect.height;
-    this.canvas.width = Math.floor(this.viewW * this.dpr);
-    this.canvas.height = Math.floor(this.viewH * this.dpr);
+    const fallbackW = window.innerWidth || 360;
+    const fallbackH = Math.max(280, (window.innerHeight || 640) - 110);
+    this.viewW = rect.width || fallbackW;
+    this.viewH = rect.height || fallbackH;
+    this.canvas.width = Math.max(1, Math.floor(this.viewW * this.dpr));
+    this.canvas.height = Math.max(1, Math.floor(this.viewH * this.dpr));
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     this.fitMaze();
   }
 
+  recenterAfterResize(){
+    const before = this.player ? this.pixelToCell(this.player.x, this.player.y) : null;
+    this.resize();
+    if(this.player && before && this.maze?.[before.y]?.[before.x] === PATH){
+      const c = this.cellCenter(before);
+      this.player.x = c.x;
+      this.player.y = c.y;
+      this.player.r = this.cell * .32;
+      this.player.dir = { x:0, y:0 };
+      this.player.speed = 0;
+      this.player.safe = [];
+      this.pushSafePosition();
+    } else if(this.player){
+      const s = this.cellCenter(this.startCell);
+      this.player.x = s.x;
+      this.player.y = s.y;
+      this.player.r = this.cell * .32;
+      this.player.safe = [];
+      this.pushSafePosition();
+    }
+  }
+
   fitMaze(){
     if(!this.rows || !this.cols) return;
-    this.cell = Math.floor(Math.min(this.viewW / this.cols, this.viewH / this.rows));
+    this.cell = Math.max(8, Math.floor(Math.min(this.viewW / this.cols, this.viewH / this.rows)));
     this.ox = (this.viewW - this.cell * this.cols) / 2;
     this.oy = (this.viewH - this.cell * this.rows) / 2;
   }
@@ -165,7 +206,7 @@ export class LaberinOjoGame {
   teleportPlayer(){
     if(!this.running || !this.player) return;
 
-    const maxDist = this.player.r * 6; // 3 diámetros. Puede saltar muros: solo se valida el destino.
+    const maxDist = this.player.r * 6;
     const centers = this.nearbyHealthyCenters(maxDist);
 
     if(centers.length){
@@ -201,8 +242,12 @@ export class LaberinOjoGame {
     return Math.abs(dx) > Math.abs(dy) ? { x:Math.sign(dx), y:0 } : { x:0, y:Math.sign(dy) };
   }
 
+  getEventPoint(e){
+    return e.changedTouches ? e.changedTouches[0] : e;
+  }
+
   setPointer(e){
-    const t = e.changedTouches ? e.changedTouches[0] : e;
+    const t = this.getEventPoint(e);
     this.input.x = t.clientX;
     this.input.y = t.clientY;
     const dx = this.input.x - this.input.sx;
@@ -218,12 +263,13 @@ export class LaberinOjoGame {
     if(!this.running){
       this.overlay.style.display = 'none';
       this.newLevel(this.level);
+      this.recenterAfterResize();
     } else {
       this.overlay.style.display = 'none';
     }
-    const t = e.changedTouches ? e.changedTouches[0] : e;
+    const t = this.getEventPoint(e);
     this.input.active = true;
-    this.input.id = t.identifier ?? 'mouse';
+    this.input.id = t.pointerId ?? t.identifier ?? 'mouse';
     this.input.sx = t.clientX;
     this.input.sy = t.clientY;
     this.setPointer(e);
