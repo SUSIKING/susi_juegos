@@ -1,5 +1,5 @@
-export const APP_VERSION = 'v0.0.0.9';
-export const BUILD_TIMESTAMP_CL = '2026-06-17 08:18 CLT';
+export const APP_VERSION = 'v0.0.1.0';
+export const BUILD_TIMESTAMP_CL = '2026-06-17 08:31 CLT';
 
 export const WALL = 0;
 export const PATH = 1;
