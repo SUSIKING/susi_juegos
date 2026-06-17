@@ -1,4 +1,4 @@
-# Ojo Maze
+# LaberinOjo
 
 Mini juego arcade en HTML monolítico para móvil y escritorio.
 
