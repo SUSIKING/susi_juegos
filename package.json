@@ -1,0 +1,9 @@
+{
+  "name": "laberinojo",
+  "version": "0.0.0.8",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bump": "node scripts/bump-version.mjs"
+  }
+}
