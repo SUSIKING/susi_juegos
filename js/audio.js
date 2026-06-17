@@ -53,8 +53,8 @@ export class AudioEngine {
   scheduleMusic(){
     if(!this.ctx) return;
 
-    const bpm = 90;
-    const transpose = -4;
+    const bpm = 75;
+    const transpose = -6;
     const beat = 60 / bpm;
     const swing = 0.58;
     const melody = [62,65,69,72,71,69,67,64,62,65,69,74,72,71,69,67];
