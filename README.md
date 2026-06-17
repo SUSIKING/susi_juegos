@@ -9,7 +9,7 @@ Controlas un ojo circular dentro de laberintos ortogonales estáticos. El objeti
 ## Versión actual
 
 ```text
-v0.0.1.0 · 2026-06-17 08:31 CLT
+v0.0.1.1 · 2026-06-17 08:42 CLT
 ```
 
 ## Regla obligatoria de versionado
@@ -17,7 +17,7 @@ v0.0.1.0 · 2026-06-17 08:31 CLT
 Cada cambio del juego debe incrementar la versión secuencialmente:
 
 ```text
-v0.0.1.0 → v0.0.1.1 → v0.0.1.2 → v0.0.1.3
+v0.0.1.1 → v0.0.1.2 → v0.0.1.3 → v0.0.1.4
 ```
 
 La regla está automatizada con:
@@ -59,6 +59,7 @@ El script actualiza:
 - El teletransporte puede saltar muros si el destino sano cabe dentro del rango.
 - Música procedural simple con Web Audio API, activada por el primer toque.
 - Música configurada a 75 BPM y transposición total de -6 semitonos.
+- Volumen maestro centralizado en `AUDIO_MASTER_GAIN = 0.5`.
 - Audio robustecido con `AudioContext.resume()` en gestos de usuario.
 - Cada carga nueva limpia el progreso local y parte desde nivel 1.
 - CSS/JS usan cache-busting por versión para reducir caché agresivo en WebViews.
@@ -96,7 +97,7 @@ susi_juegos/
 | `js/game.js` | Motor principal: input, movimiento por grilla, interpolación visual, daño, HUD, render y teletransporte. |
 | `js/maze.js` | Generación de laberintos por semilla. |
 | `js/audio.js` | Música procedural, efectos sonoros y reanudación del contexto de audio. |
-| `js/config.js` | Versión, timestamp, constantes, dificultad y utilidades. |
+| `js/config.js` | Versión, timestamp, constantes, volumen, dificultad y utilidades. |
 | `scripts/bump-version.mjs` | Incrementa versión, timestamp y cache keys. |
 | `apps-script-ranking.gs` | Backend opcional para ranking global con Google Sheets. |
 
