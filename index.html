@@ -104,10 +104,31 @@
   function isWallAt(px,py){ const x = Math.floor((px-ox)/cell), y = Math.floor((py-oy)/cell); return x<0||y<0||x>=cols||y>=rows||maze[y][x]===WALL; }
   function circleHitsWall(x,y,r){ const pts = [[0,0],[r,0],[-r,0],[0,r],[0,-r],[r*.7,r*.7],[-r*.7,r*.7],[r*.7,-r*.7],[-r*.7,-r*.7]]; return pts.some(([dx,dy])=>isWallAt(x+dx,y+dy)); }
 
+  function pushSafePosition(){
+    if(!player || circleHitsWall(player.x, player.y, player.r)) return;
+    player.safe.push({x:player.x, y:player.y});
+    if(player.safe.length > 18) player.safe.shift();
+  }
+
+  function rollbackPlayer(){
+    if(!player?.safe?.length) return;
+    const candidates = [...player.safe].reverse();
+    const target = candidates[Math.min(7, candidates.length - 1)];
+    if(target && !circleHitsWall(target.x, target.y, player.r)){
+      player.x = target.x;
+      player.y = target.y;
+      player.safe = [target];
+      return;
+    }
+    const fallback = candidates.find(p => !circleHitsWall(p.x, p.y, player.r));
+    if(fallback){ player.x = fallback.x; player.y = fallback.y; player.safe = [fallback]; }
+  }
+
   function newLevel(n){
     level = n; localStorage.setItem('laberinOjoLevel', String(level)); maze = buildMaze(level); fitMaze();
     const s = cellCenter(startCell);
-    player = {x:s.x,y:s.y,r:cell*.32,dir:{x:0,y:0},wanted:{x:0,y:0},speed:0,lives:5,damageUntil:0,dead:false,penalty:0,blink:0};
+    player = {x:s.x,y:s.y,r:cell*.32,dir:{x:0,y:0},wanted:{x:0,y:0},speed:0,lives:5,damageUntil:0,dead:false,penalty:0,blink:0,safe:[]};
+    pushSafePosition();
     input = {active:false,id:null,sx:0,sy:0,x:0,y:0,power:0,dir:{x:0,y:0}};
     startMs = performance.now(); elapsed = 0; running = true; updateHud();
   }
@@ -132,17 +153,21 @@
 
   function update(dt, now){
     if(!running) return; elapsed = (now - startMs)/1000; const p = params(level); const center = nearCellCenter();
-    if(center.ok){ player.x = center.cx; player.y = center.cy; if(canMove(player.wanted)) player.dir = {...player.wanted}; else if(!canMove(player.dir)) player.dir = {x:0,y:0}; }
+    if(center.ok){ player.x = center.cx; player.y = center.cy; if(!circleHitsWall(player.x, player.y, player.r)) pushSafePosition(); if(canMove(player.wanted)) player.dir = {...player.wanted}; else if(!canMove(player.dir)) player.dir = {x:0,y:0}; }
     const pow = input.active ? input.power : Math.max(0, player.speed / p.speedMax - dt*4); const shaped = Math.pow(pow,1.35); player.speed = pow>0 ? p.speedMin + (p.speedMax-p.speedMin)*shaped : 0;
     const nx = player.x + player.dir.x * player.speed * dt, ny = player.y + player.dir.y * player.speed * dt;
-    if(!circleHitsWall(nx,ny,player.r)) { player.x=nx; player.y=ny; } else damage(now, p);
+    if(!circleHitsWall(nx,ny,player.r)) { player.x=nx; player.y=ny; pushSafePosition(); } else damage(now, p);
     const g = cellCenter(goalCell);
     if(Math.hypot(player.x-g.x, player.y-g.y) < cell*.45){ const finalTime = elapsed + player.penalty; best[level] = Math.min(best[level] || Infinity, finalTime); localStorage.setItem('laberinOjoBest', JSON.stringify(best)); newLevel(level+1); }
     updateHud();
   }
 
   function damage(now,p){
-    if(now < player.damageUntil) return; player.lives--; player.penalty += p.wallPenalty; player.damageUntil = now + 650; player.blink = now + 650; player.x -= player.dir.x * cell*.14; player.y -= player.dir.y * cell*.14; player.dir={x:0,y:0}; beep(110, .08, 'sawtooth', .05);
+    if(now < player.damageUntil) return;
+    player.lives--; player.penalty += p.wallPenalty; player.damageUntil = now + 650; player.blink = now + 650;
+    rollbackPlayer();
+    player.dir={x:0,y:0}; player.speed=0;
+    beep(110, .08, 'sawtooth', .05);
     if(player.lives<=0){ running=false; setTimeout(()=>{newLevel(level)}, 450); }
   }
 
