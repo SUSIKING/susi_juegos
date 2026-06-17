@@ -9,13 +9,14 @@ Controlas un ojo circular dentro de laberintos ortogonales estáticos. El objeti
 ## Versión actual
 
 ```text
-v0.0.0.6 · 2026-06-17 07:48 CLT
+v0.0.0.7 · 2026-06-17 07:57 CLT
 ```
 
 ## Mecánicas actuales
 
 - Joystick invisible: toca y arrastra en cualquier parte de la pantalla.
 - Cruceta táctil fija para compatibilidad con WebViews como Instagram.
+- Cruceta en modo persistente: tocar una dirección mantiene el movimiento hasta tocar otra.
 - Velocidad variable: arrastre corto para precisión, arrastre largo para máxima velocidad.
 - Movimiento ortogonal inspirado en juegos arcade de laberinto.
 - Laberintos infinitos generados por semilla determinística.
@@ -66,11 +67,12 @@ susi_juegos/
 
 1. Abre `index.html` o la URL publicada en GitHub Pages.
 2. Toca la pantalla para comenzar.
-3. Usa la cruceta para moverte si estás en Instagram o un WebView.
-4. También puedes arrastrar en cualquier dirección para mover el ojo.
-5. Usa el botón rojo si necesitas un teletransporte corto de emergencia.
-6. Llega al portal amarillo.
-7. Intenta reducir tu tiempo final.
+3. En Instagram, toca una flecha de la cruceta para fijar dirección.
+4. Toca otra flecha para cambiar dirección.
+5. También puedes arrastrar en cualquier dirección para mover el ojo.
+6. Usa el botón rojo si necesitas un teletransporte corto de emergencia.
+7. Llega al portal amarillo.
+8. Intenta reducir tu tiempo final.
 
 ## Publicación recomendada
 
