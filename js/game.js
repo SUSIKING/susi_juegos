@@ -1,6 +1,6 @@
-import { APP_VERSION, BUILD_TIMESTAMP_CL, WALL, PATH, STORAGE_KEYS, clamp } from './config.js?v=006';
-import { buildMaze } from './maze.js?v=006';
-import { AudioEngine } from './audio.js?v=006';
+import { APP_VERSION, BUILD_TIMESTAMP_CL, WALL, PATH, STORAGE_KEYS, clamp } from './config.js?v=007';
+import { buildMaze } from './maze.js?v=007';
+import { AudioEngine } from './audio.js?v=007';
 
 export class LaberinOjoGame {
   constructor(){
@@ -21,7 +21,6 @@ export class LaberinOjoGame {
     this.level = Number(localStorage.getItem(STORAGE_KEYS.level) || 1);
     this.best = JSON.parse(localStorage.getItem(STORAGE_KEYS.best) || '{}');
     this.lastT = performance.now(); this.running = false; this.elapsed = 0;
-    this.dpadHeld = false;
 
     this.bindEvents();
     this.resize();
@@ -52,15 +51,9 @@ export class LaberinOjoGame {
 
     this.dpad?.querySelectorAll('.dpadBtn').forEach(btn => {
       const start = e => this.onDpadDown(e, btn);
-      const end = e => this.onDpadUp(e, btn);
       btn.addEventListener('pointerdown', start);
-      btn.addEventListener('pointerup', end);
-      btn.addEventListener('pointercancel', end);
-      btn.addEventListener('pointerleave', end);
       btn.addEventListener('touchstart', start, { passive:false });
-      btn.addEventListener('touchend', end, { passive:false });
       btn.addEventListener('mousedown', start);
-      btn.addEventListener('mouseup', end);
     });
 
     window.addEventListener('resize', () => this.recenterAfterResize());
@@ -69,7 +62,6 @@ export class LaberinOjoGame {
   }
 
   deferStartupResize(){ requestAnimationFrame(() => this.recenterAfterResize()); setTimeout(() => this.recenterAfterResize(), 120); setTimeout(() => this.recenterAfterResize(), 450); }
-
   resize(){
     this.dpr = Math.min(2, window.devicePixelRatio || 1);
     const rect = this.stage.getBoundingClientRect();
@@ -80,18 +72,13 @@ export class LaberinOjoGame {
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     this.fitMaze();
   }
-
   recenterAfterResize(){
     const before = this.player ? this.pixelToCell(this.player.x, this.player.y) : null;
     this.resize();
-    if(this.player && before && this.maze?.[before.y]?.[before.x] === PATH){
-      const c = this.cellCenter(before); this.player.x = c.x; this.player.y = c.y;
-    } else if(this.player){
-      const s = this.cellCenter(this.startCell); this.player.x = s.x; this.player.y = s.y;
-    }
+    if(this.player && before && this.maze?.[before.y]?.[before.x] === PATH){ const c = this.cellCenter(before); this.player.x = c.x; this.player.y = c.y; }
+    else if(this.player){ const s = this.cellCenter(this.startCell); this.player.x = s.x; this.player.y = s.y; }
     if(this.player){ this.player.r = this.cell * .32; this.player.dir = {x:0,y:0}; this.player.speed = 0; this.player.safe = []; this.pushSafePosition(); }
   }
-
   fitMaze(){ if(!this.rows || !this.cols) return; this.cell = Math.max(8, Math.floor(Math.min(this.viewW / this.cols, this.viewH / this.rows))); this.ox = (this.viewW - this.cell * this.cols) / 2; this.oy = (this.viewH - this.cell * this.rows) / 2; }
 
   newLevel(level){
@@ -110,40 +97,15 @@ export class LaberinOjoGame {
   pixelToCell(px,py){ return {x:Math.floor((px-this.ox)/this.cell),y:Math.floor((py-this.oy)/this.cell)}; }
   isWallAt(px,py){ const x=Math.floor((px-this.ox)/this.cell), y=Math.floor((py-this.oy)/this.cell); return x<0||y<0||x>=this.cols||y>=this.rows||this.maze[y][x]===WALL; }
   circleHitsWall(x,y,r){ const pts=[[0,0],[r,0],[-r,0],[0,r],[0,-r],[r*.7,r*.7],[-r*.7,r*.7],[r*.7,-r*.7],[-r*.7,-r*.7]]; return pts.some(([dx,dy])=>this.isWallAt(x+dx,y+dy)); }
-
   pushSafePosition(){ if(!this.player || this.circleHitsWall(this.player.x,this.player.y,this.player.r)) return; this.player.safe.push({x:this.player.x,y:this.player.y}); if(this.player.safe.length>18) this.player.safe.shift(); }
-  rollbackPlayer(){
-    if(!this.player?.safe?.length) return;
-    const candidates=[...this.player.safe].reverse();
-    const target=candidates[Math.min(7,candidates.length-1)];
-    if(target && !this.circleHitsWall(target.x,target.y,this.player.r)){ this.player.x=target.x; this.player.y=target.y; this.player.safe=[target]; return; }
-    const fallback=candidates.find(p=>!this.circleHitsWall(p.x,p.y,this.player.r));
-    if(fallback){ this.player.x=fallback.x; this.player.y=fallback.y; this.player.safe=[fallback]; }
-  }
-
-  nearbyHealthyCenters(maxDist){
-    const here=this.pixelToCell(this.player.x,this.player.y), radiusCells=Math.ceil(maxDist/this.cell)+1, out=[];
-    for(let gy=here.y-radiusCells;gy<=here.y+radiusCells;gy++) for(let gx=here.x-radiusCells;gx<=here.x+radiusCells;gx++){
-      if(gx<0||gy<0||gx>=this.cols||gy>=this.rows||this.maze[gy][gx]!==PATH) continue;
-      const c=this.cellCenter({x:gx,y:gy}); const dist=Math.hypot(c.x-this.player.x,c.y-this.player.y);
-      if(dist<=maxDist && !this.circleHitsWall(c.x,c.y,this.player.r*.92)) out.push({...c,dist,rnd:Math.random()});
-    }
-    return out.sort((a,b)=>a.dist-b.dist||a.rnd-b.rnd);
-  }
-
+  rollbackPlayer(){ if(!this.player?.safe?.length) return; const candidates=[...this.player.safe].reverse(); const target=candidates[Math.min(7,candidates.length-1)]; if(target && !this.circleHitsWall(target.x,target.y,this.player.r)){ this.player.x=target.x; this.player.y=target.y; this.player.safe=[target]; return; } const fallback=candidates.find(p=>!this.circleHitsWall(p.x,p.y,this.player.r)); if(fallback){ this.player.x=fallback.x; this.player.y=fallback.y; this.player.safe=[fallback]; } }
+  nearbyHealthyCenters(maxDist){ const here=this.pixelToCell(this.player.x,this.player.y), radiusCells=Math.ceil(maxDist/this.cell)+1, out=[]; for(let gy=here.y-radiusCells;gy<=here.y+radiusCells;gy++) for(let gx=here.x-radiusCells;gx<=here.x+radiusCells;gx++){ if(gx<0||gy<0||gx>=this.cols||gy>=this.rows||this.maze[gy][gx]!==PATH) continue; const c=this.cellCenter({x:gx,y:gy}); const dist=Math.hypot(c.x-this.player.x,c.y-this.player.y); if(dist<=maxDist && !this.circleHitsWall(c.x,c.y,this.player.r*.92)) out.push({...c,dist,rnd:Math.random()}); } return out.sort((a,b)=>a.dist-b.dist||a.rnd-b.rnd); }
   settleAfterRelocation(){ this.player.dir={x:0,y:0}; this.player.speed=0; if(this.canMove(this.player.wanted)) this.player.dir={...this.player.wanted}; this.pushSafePosition(); }
-  teleportPlayer(){
-    if(!this.running||!this.player) return;
-    const centers=this.nearbyHealthyCenters(this.player.r*6);
-    if(centers.length){ const pick=centers[Math.min(centers.length-1,Math.floor(Math.random()*Math.min(8,centers.length)))]; this.player.x=pick.x; this.player.y=pick.y; this.player.teleportUntil=performance.now()+280; this.settleAfterRelocation(); this.audio.beep(660,.05,'square',.04); return; }
-    this.rollbackPlayer(); this.settleAfterRelocation(); this.player.teleportUntil=performance.now()+180; this.audio.beep(180,.05,'sawtooth',.035);
-  }
-
+  teleportPlayer(){ if(!this.running||!this.player) return; const centers=this.nearbyHealthyCenters(this.player.r*6); if(centers.length){ const pick=centers[Math.min(centers.length-1,Math.floor(Math.random()*Math.min(8,centers.length)))]; this.player.x=pick.x; this.player.y=pick.y; this.player.teleportUntil=performance.now()+280; this.settleAfterRelocation(); this.audio.beep(660,.05,'square',.04); return; } this.rollbackPlayer(); this.settleAfterRelocation(); this.player.teleportUntil=performance.now()+180; this.audio.beep(180,.05,'sawtooth',.035); }
   updateHud(){ this.levelTxt.textContent=this.level; this.timeTxt.textContent=(this.elapsed+(this.player?.penalty||0)).toFixed(2); this.livesEl.innerHTML=''; for(let i=0;i<5;i++){ const d=document.createElement('div'); d.className='life'+(i>=this.player.lives?' off':'')+(this.player.lives===1&&i===0?' low':''); this.livesEl.appendChild(d); } }
   dominant(dx,dy){ if(Math.hypot(dx,dy)<10) return {x:0,y:0}; return Math.abs(dx)>Math.abs(dy)?{x:Math.sign(dx),y:0}:{x:0,y:Math.sign(dy)}; }
   getEventPoint(e){ return e.changedTouches ? e.changedTouches[0] : e; }
   dirFromName(name){ return {up:{x:0,y:-1},down:{x:0,y:1},left:{x:-1,y:0},right:{x:1,y:0}}[name] || {x:0,y:0}; }
-
   startGameIfNeeded(){ this.audio.start(); if(!this.running){ this.overlay.style.display='none'; this.newLevel(this.level); this.recenterAfterResize(); } else this.overlay.style.display='none'; }
 
   setPointer(e){ const t=this.getEventPoint(e); this.input.x=t.clientX; this.input.y=t.clientY; const dx=this.input.x-this.input.sx, dy=this.input.y-this.input.sy; this.input.power=clamp(Math.hypot(dx,dy)/80,0,1); this.input.dir=this.dominant(dx,dy); this.player.wanted=this.input.dir; }
@@ -151,8 +113,18 @@ export class LaberinOjoGame {
   onMove(e){ if(!this.input?.active || this.input.mode!=='drag') return; e.preventDefault(); this.setPointer(e); }
   onUp(e){ if(!this.input) return; e.preventDefault(); if(this.input.mode==='drag'){ this.input.active=false; this.input.power=0; this.player.wanted={x:0,y:0}; this.input.mode='none'; } }
 
-  onDpadDown(e,btn){ e.preventDefault(); e.stopPropagation(); this.startGameIfNeeded(); const dir=this.dirFromName(btn.dataset.dir); this.dpadHeld=true; btn.classList.add('pressed'); this.input.active=true; this.input.mode='dpad'; this.input.power=1; this.input.dir=dir; this.player.wanted=dir; if(this.canMove(dir)) this.player.dir={...dir}; }
-  onDpadUp(e,btn){ e.preventDefault(); e.stopPropagation(); btn.classList.remove('pressed'); this.dpadHeld=false; if(this.input?.mode==='dpad'){ this.input.active=false; this.input.power=0; this.input.dir={x:0,y:0}; this.player.wanted={x:0,y:0}; this.input.mode='none'; } }
+  setDpadDirection(dir, btn){
+    this.dpad?.querySelectorAll('.dpadBtn').forEach(b => b.classList.remove('pressed'));
+    btn?.classList.add('pressed');
+    this.input.active = true;
+    this.input.mode = 'dpad';
+    this.input.power = 1;
+    this.input.dir = dir;
+    this.player.wanted = dir;
+    if(this.canMove(dir)) this.player.dir = { ...dir };
+  }
+
+  onDpadDown(e,btn){ e.preventDefault(); e.stopPropagation(); this.startGameIfNeeded(); this.setDpadDirection(this.dirFromName(btn.dataset.dir), btn); }
   onTeleportPress(e){ e.preventDefault(); e.stopPropagation(); this.audio.start(); this.teleportPlayer(); }
 
   canMove(dir){ if(!dir.x&&!dir.y) return false; const nx=this.player.x+dir.x*this.cell*.42, ny=this.player.y+dir.y*this.cell*.42; return !this.circleHitsWall(nx,ny,this.player.r*.9); }
@@ -173,7 +145,6 @@ export class LaberinOjoGame {
 
   damage(now){ if(now<this.player.damageUntil) return; this.player.lives--; this.player.penalty+=this.levelParams.wallPenalty; this.player.damageUntil=now+650; this.player.blink=now+650; this.rollbackPlayer(); this.player.dir={x:0,y:0}; this.player.speed=0; this.audio.beep(110,.08,'sawtooth',.05); if(this.player.lives<=0){ this.running=false; setTimeout(()=>this.newLevel(this.level),450); } }
   draw(){ this.ctx.clearRect(0,0,this.viewW,this.viewH); this.drawMaze(); this.drawGoal(); this.drawPlayer(); if(this.input?.active && this.input.mode==='drag') this.drawJoystick(); }
-
   drawMaze(){ const ctx=this.ctx; ctx.save(); ctx.translate(this.ox,this.oy); ctx.lineJoin='round'; ctx.lineCap='round'; for(let y=0;y<this.rows;y++) for(let x=0;x<this.cols;x++) if(this.maze[y][x]===WALL){ const px=x*this.cell, py=y*this.cell, grad=ctx.createLinearGradient(px,py,px+this.cell,py+this.cell); grad.addColorStop(0,'#083cbd'); grad.addColorStop(1,'#1ed6ff'); ctx.fillStyle=grad; ctx.shadowColor='rgba(39,215,255,.7)'; ctx.shadowBlur=8; const r=Math.max(4,this.cell*.18); this.roundRect(px+1.2,py+1.2,this.cell-2.4,this.cell-2.4,r); ctx.fill(); ctx.shadowBlur=0; ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1; ctx.stroke(); } ctx.restore(); }
   drawGoal(){ const ctx=this.ctx, goal=this.cellCenter(this.goalCell), pulse=1+Math.sin(performance.now()/1000*5)*.08; ctx.save(); ctx.translate(goal.x,goal.y); ctx.scale(pulse,pulse); ctx.shadowColor='rgba(255,216,77,.9)'; ctx.shadowBlur=22; ctx.strokeStyle='#ffd84d'; ctx.lineWidth=Math.max(3,this.cell*.1); ctx.beginPath(); ctx.arc(0,0,this.cell*.34,0,Math.PI*2); ctx.stroke(); ctx.fillStyle='rgba(255,216,77,.18)'; ctx.beginPath(); ctx.arc(0,0,this.cell*.24,0,Math.PI*2); ctx.fill(); ctx.restore(); }
   drawPlayer(){ const ctx=this.ctx, now=performance.now(); if(now<this.player.blink&&Math.floor(now/70)%2===0) return; const look=this.player.wanted.x||this.player.wanted.y?this.player.wanted:this.player.dir, lx=look.x*this.player.r*.34, ly=look.y*this.player.r*.34; if(now<this.player.teleportUntil){ ctx.save(); ctx.translate(this.player.x,this.player.y); ctx.globalAlpha=.75; ctx.strokeStyle='#ff4c6a'; ctx.lineWidth=3; ctx.setLineDash([3,3]); ctx.beginPath(); ctx.arc(0,0,this.player.r*1.62,0,Math.PI*2); ctx.stroke(); ctx.restore(); } ctx.save(); ctx.translate(this.player.x,this.player.y); ctx.shadowColor=this.player.lives===1?'rgba(255,76,106,.9)':'rgba(255,255,255,.8)'; ctx.shadowBlur=16; ctx.fillStyle=this.player.lives===1?'#ffe2e8':'#f8fbff'; ctx.beginPath(); ctx.arc(0,0,this.player.r,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=8; ctx.fillStyle='#6ee7ff'; ctx.beginPath(); ctx.arc(lx,ly,this.player.r*.48,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0; ctx.fillStyle='#040611'; ctx.beginPath(); ctx.arc(lx+look.x*this.player.r*.12,ly+look.y*this.player.r*.12,this.player.r*.23,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='rgba(0,0,0,.45)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,0,this.player.r,0,Math.PI*2); ctx.stroke(); ctx.restore(); }
