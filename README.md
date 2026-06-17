@@ -9,8 +9,33 @@ Controlas un ojo circular dentro de laberintos ortogonales estáticos. El objeti
 ## Versión actual
 
 ```text
-v0.0.0.7 · 2026-06-17 07:57 CLT
+v0.0.0.8 · 2026-06-17 08:07 CLT
 ```
+
+## Regla obligatoria de versionado
+
+Cada cambio del juego debe incrementar la versión secuencialmente:
+
+```text
+v0.0.0.8 → v0.0.0.9 → v0.0.1.0 → v0.0.1.1
+```
+
+La regla está automatizada con:
+
+```bash
+npm run bump
+```
+
+El script actualiza:
+
+- `js/config.js`
+- `index.html`
+- `js/main.js`
+- `js/game.js`
+- `js/maze.js`
+- `README.md`
+- cache keys `?v=XXX`
+- timestamp en zona horaria Chile
 
 ## Mecánicas actuales
 
@@ -45,7 +70,10 @@ susi_juegos/
 │   ├── maze.js
 │   ├── audio.js
 │   └── config.js
+├── scripts/
+│   └── bump-version.mjs
 ├── apps-script-ranking.gs
+├── package.json
 ├── README.md
 └── LICENSE
 ```
@@ -61,6 +89,7 @@ susi_juegos/
 | `js/maze.js` | Generación de laberintos por semilla. |
 | `js/audio.js` | Música procedural y efectos sonoros. |
 | `js/config.js` | Versión, timestamp, constantes, dificultad y utilidades. |
+| `scripts/bump-version.mjs` | Incrementa versión, timestamp y cache keys. |
 | `apps-script-ranking.gs` | Backend opcional para ranking global con Google Sheets. |
 
 ## Cómo jugar
