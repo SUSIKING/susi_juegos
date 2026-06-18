@@ -9,7 +9,7 @@ Controlas un ojo circular dentro de laberintos ortogonales estáticos. El objeti
 ## Versión actual
 
 ```text
-v0.0.1.1 · 2026-06-17 08:42 CLT
+v0.0.1.2 · 2026-06-17 22:59 CLT
 ```
 
 ## Regla obligatoria de versionado
@@ -17,7 +17,7 @@ v0.0.1.1 · 2026-06-17 08:42 CLT
 Cada cambio del juego debe incrementar la versión secuencialmente:
 
 ```text
-v0.0.1.1 → v0.0.1.2 → v0.0.1.3 → v0.0.1.4
+v0.0.1.2 → v0.0.1.3 → v0.0.1.4 → v0.0.1.5
 ```
 
 La regla está automatizada con:
@@ -39,6 +39,7 @@ El script actualiza:
 - `js/main.js`
 - `js/game.js`
 - `js/maze.js`
+- `js/audio.js`
 - `README.md`
 - `package.json`
 - cache keys `?v=XXX`
@@ -58,7 +59,9 @@ El script actualiza:
 - Botón rojo de teletransporte de emergencia.
 - El teletransporte puede saltar muros si el destino sano cabe dentro del rango.
 - Música procedural simple con Web Audio API, activada por el primer toque.
+- Ciclo musical aproximado: 6.4 segundos a 75 BPM.
 - Música configurada a 75 BPM y transposición total de -6 semitonos.
+- Inicio musical inmediato: `scheduleMusic()` se llama apenas el `AudioContext` queda running.
 - Volumen maestro centralizado en `AUDIO_MASTER_GAIN = 0.5`.
 - Audio robustecido con `AudioContext.resume()` en gestos de usuario.
 - Cada carga nueva limpia el progreso local y parte desde nivel 1.
@@ -96,8 +99,8 @@ susi_juegos/
 | `js/main.js` | Bootstrap del juego. |
 | `js/game.js` | Motor principal: input, movimiento por grilla, interpolación visual, daño, HUD, render y teletransporte. |
 | `js/maze.js` | Generación de laberintos por semilla. |
-| `js/audio.js` | Música procedural, efectos sonoros y reanudación del contexto de audio. |
-| `js/config.js` | Versión, timestamp, constantes, volumen, dificultad y utilidades. |
+| `js/audio.js` | Música procedural, efectos sonoros, reanudación del contexto de audio y scheduling inmediato. |
+| `js/config.js` | Versión, timestamp, constantes, volumen, música, dificultad y utilidades. |
 | `scripts/bump-version.mjs` | Incrementa versión, timestamp y cache keys. |
 | `apps-script-ranking.gs` | Backend opcional para ranking global con Google Sheets. |
 
