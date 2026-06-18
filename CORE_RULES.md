@@ -9,7 +9,7 @@ Todo cambio en el repo debe incrementar la versión secuencialmente.
 Secuencia:
 
 ```text
-v0.0.0.8 → v0.0.0.9 → v0.0.1.0 → v0.0.1.1 → v0.0.1.2
+v0.0.1.1 → v0.0.1.2 → v0.0.1.3 → v0.0.1.4 → v0.0.1.5
 ```
 
 Regla de acarreo:
@@ -35,24 +35,47 @@ El script debe actualizar:
 - `js/main.js`
 - `js/game.js`
 - `js/maze.js`
+- `js/audio.js`
 - `README.md`
 - `package.json`
 - cache keys `?v=XXX`
 - timestamp en zona horaria Chile
 
-## 3. Cache-busting obligatorio
+## 3. Timestamp automático obligatorio
+
+El timestamp nunca se debe inventar ni escribir manualmente.
+
+Debe ser generado por:
+
+```text
+scripts/bump-version.mjs
+```
+
+usando:
+
+```text
+America/Santiago
+```
+
+Formato esperado:
+
+```text
+YYYY-MM-DD HH:mm CLT
+```
+
+## 4. Cache-busting obligatorio
 
 Toda nueva versión debe sincronizar cache keys.
 
 Ejemplo:
 
 ```text
-v0.0.0.9 → ?v=009
-v0.0.1.0 → ?v=010
 v0.0.1.1 → ?v=011
+v0.0.1.2 → ?v=012
+v0.0.1.3 → ?v=013
 ```
 
-## 4. Respuesta final obligatoria
+## 5. Respuesta final obligatoria
 
 Toda respuesta después de modificar el repo debe informar:
 
@@ -61,13 +84,13 @@ Toda respuesta después de modificar el repo debe informar:
 - commits principales;
 - link de prueba con cache key.
 
-## 5. No romper GitHub Pages
+## 6. No romper GitHub Pages
 
 `index.html` debe seguir siendo la entrada principal del sitio.
 
 No se deben agregar dependencias externas obligatorias para ejecutar el juego.
 
-## 6. Seguridad
+## 7. Seguridad
 
 El juego no debe pedir permisos sensibles:
 
@@ -79,7 +102,7 @@ El juego no debe pedir permisos sensibles:
 
 No usar `eval()` ni cargar scripts remotos innecesarios.
 
-## 7. Compatibilidad móvil
+## 8. Compatibilidad móvil
 
 Todo cambio visual o de input debe considerar:
 
@@ -88,7 +111,7 @@ Todo cambio visual o de input debe considerar:
 - WebViews móviles como Instagram;
 - pantalla vertical.
 
-## 8. Estado del juego
+## 9. Estado del juego
 
 Cada apertura pública debe partir desde cero salvo que se defina explícitamente una mecánica de progreso persistente.
 
@@ -99,10 +122,10 @@ laberinOjoLevel
 laberinOjoBest
 ```
 
-## 9. Cambios de control
+## 10. Cambios de control
 
 Si el joystick invisible falla en WebViews, debe existir fallback visible, actualmente la cruceta táctil.
 
-## 10. Regla de honestidad técnica
+## 11. Regla de honestidad técnica
 
 Si un cambio queda incompleto, se debe decir explícitamente y no afirmar que quedó cerrado.
