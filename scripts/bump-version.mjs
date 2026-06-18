@@ -7,6 +7,7 @@ const FILES = {
   main: 'js/main.js',
   game: 'js/game.js',
   maze: 'js/maze.js',
+  audio: 'js/audio.js',
   readme: 'README.md',
   packageJson: 'package.json'
 };
@@ -91,6 +92,7 @@ replaceOrThrow(FILES.game, /config\.js\?v=\d+/g, `config.js?v=${key}`);
 replaceOrThrow(FILES.game, /maze\.js\?v=\d+/g, `maze.js?v=${key}`);
 replaceOrThrow(FILES.game, /audio\.js\?v=\d+/g, `audio.js?v=${key}`);
 replaceOrThrow(FILES.maze, /config\.js\?v=\d+/g, `config.js?v=${key}`);
+replaceOrThrow(FILES.audio, /config\.js\?v=\d+/g, `config.js?v=${key}`);
 
 replaceOrThrow(FILES.readme, /v\d+\.\d+\.\d+\.\d+ · \d{4}-\d{2}-\d{2} \d{2}:\d{2} CLT/, `${next} · ${timestamp}`);
 replaceOrThrow(FILES.packageJson, /"version"\s*:\s*"\d+\.\d+\.\d+\.\d+"/, `"version": "${bareVersion(next)}"`);
