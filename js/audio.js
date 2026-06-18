@@ -1,4 +1,11 @@
-import { AUDIO_MASTER_GAIN } from './config.js?v=011';
+import {
+  AUDIO_MASTER_GAIN,
+  MUSIC_BPM,
+  MUSIC_TRANSPOSE,
+  MUSIC_LOOKAHEAD_SEC,
+  MUSIC_SCHEDULE_INTERVAL_MS,
+  MUSIC_START_DELAY_SEC
+} from './config.js?v=012';
 
 export class AudioEngine {
   constructor(){
@@ -19,18 +26,28 @@ export class AudioEngine {
       this.master = this.ctx.createGain();
       this.master.gain.value = AUDIO_MASTER_GAIN;
       this.master.connect(this.ctx.destination);
-      this.next = this.ctx.currentTime + 0.05;
+      this.next = this.ctx.currentTime + MUSIC_START_DELAY_SEC;
     }
 
     if(this.ctx.state === 'suspended'){
       try { await this.ctx.resume(); } catch (err) {}
     }
 
+    if(this.ctx.state !== 'running') return;
+
     if(!this.started){
       this.started = true;
-      this.timer = setInterval(() => this.scheduleMusic(), 90);
+      this.next = this.ctx.currentTime + MUSIC_START_DELAY_SEC;
+      this.scheduleMusic();
+      this.timer = setInterval(() => this.scheduleMusic(), MUSIC_SCHEDULE_INTERVAL_MS);
       this.beep(420, 0.035, 'sine', 0.025);
+      return;
     }
+
+    if(this.next < this.ctx.currentTime){
+      this.next = this.ctx.currentTime + MUSIC_START_DELAY_SEC;
+    }
+    this.scheduleMusic();
   }
 
   beep(freq, duration, type = 'sine', gain = 0.04){
@@ -66,26 +83,24 @@ export class AudioEngine {
   scheduleMusic(){
     if(!this.ctx || this.ctx.state !== 'running') return;
 
-    const bpm = 75;
-    const transpose = -6;
-    const beat = 60 / bpm;
+    const beat = 60 / MUSIC_BPM;
     const swing = 0.58;
     const melody = [62,65,69,72,71,69,67,64,62,65,69,74,72,71,69,67];
     const bass = [38,38,43,43,36,36,45,45];
 
-    while(this.next < this.ctx.currentTime + 0.45){
+    while(this.next < this.ctx.currentTime + MUSIC_LOOKAHEAD_SEC){
       const i = this.step % 16;
       const bar = Math.floor(this.step / 4) % 4;
       const duration = beat * (i % 2 === 0 ? swing : 1 - swing);
 
-      if(i % 2 === 0) this.note(bass[(this.step / 2 | 0) % bass.length] + transpose, this.next, beat * 0.42, 'triangle', 0.16);
+      if(i % 2 === 0) this.note(bass[(this.step / 2 | 0) % bass.length] + MUSIC_TRANSPOSE, this.next, beat * 0.42, 'triangle', 0.16);
 
       if(i % 4 === 0){
         const chords = [[62,65,69],[67,71,74],[60,64,67],[57,61,67]][bar];
-        chords.forEach((m, k) => this.note(m + transpose, this.next + k * 0.012, beat * 0.9, 'sine', 0.045));
+        chords.forEach((m, k) => this.note(m + MUSIC_TRANSPOSE, this.next + k * 0.012, beat * 0.9, 'sine', 0.045));
       }
 
-      if(i !== 6 && i !== 14) this.note(melody[i] + transpose, this.next, duration * 0.72, 'square', 0.055);
+      if(i !== 6 && i !== 14) this.note(melody[i] + MUSIC_TRANSPOSE, this.next, duration * 0.72, 'square', 0.055);
 
       this.next += duration;
       this.step++;
