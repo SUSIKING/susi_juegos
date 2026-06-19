@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#050716" />
   <title>LaberinOjo</title>
-  <link rel="stylesheet" href="./css/styles.css?v=013" />
+  <link rel="stylesheet" href="./css/styles.css?v=014" />
 </head>
 <body>
 <div id="wrap">
@@ -17,24 +17,19 @@
 
   <main id="stage">
     <canvas id="game"></canvas>
-    <div id="dpad" aria-label="Controles direccionales">
-      <div class="dpadEmpty"></div><button class="dpadBtn up" data-dir="up" aria-label="Arriba">▲</button><div class="dpadEmpty"></div>
-      <button class="dpadBtn left" data-dir="left" aria-label="Izquierda">◀</button><div class="dpadEmpty"></div><button class="dpadBtn right" data-dir="right" aria-label="Derecha">▶</button>
-      <div class="dpadEmpty"></div><button class="dpadBtn down" data-dir="down" aria-label="Abajo">▼</button><div class="dpadEmpty"></div>
-    </div>
     <button id="teleportBtn" aria-label="Teletransporte de emergencia">✦</button>
     <div id="overlay">
       <div class="card">
         <h1>LaberinOjo</h1>
-        <p>Llega a la meta en el menor tiempo posible. Usa la cruceta o arrastra en cualquier parte.</p>
+        <p>Llega a la meta en el menor tiempo posible. Arrastra en cualquier parte para avanzar.</p>
         <p>Chocar paredes debilita el ojo. Tienes 5 vidas por intento.</p>
-        <div id="versionTag" class="versionTag">v0.0.1.3</div>
+        <div id="versionTag" class="versionTag">v0.0.1.4</div>
         <div class="btn">Tocar para comenzar</div>
       </div>
     </div>
   </main>
 
-  <footer><div class="pill">Cruceta = paso por celda · arrastre = paso por dirección</div></footer>
+  <footer><div class="pill">Arrastre = paso por dirección · botón rojo = teletransporte</div></footer>
 </div>
 
 <script>
@@ -43,6 +38,6 @@ try {
   localStorage.removeItem('laberinOjoBest');
 } catch (err) {}
 </script>
-<script type="module" src="./js/main.js?v=013"></script>
+<script type="module" src="./js/main.js?v=014"></script>
 </body>
 </html>

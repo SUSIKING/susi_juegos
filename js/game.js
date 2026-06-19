@@ -9,9 +9,9 @@ import {
   PLAYER_MOVE_DURATION_MAX_MS,
   PLAYER_STEP_COOLDOWN_MS,
   clamp
-} from './config.js?v=013';
-import { buildMaze } from './maze.js?v=013';
-import { AudioEngine } from './audio.js?v=013';
+} from './config.js?v=014';
+import { buildMaze } from './maze.js?v=014';
+import { AudioEngine } from './audio.js?v=014';
 
 export class LaberinOjoGame {
   constructor(){
@@ -20,7 +20,6 @@ export class LaberinOjoGame {
     this.stage = document.getElementById('stage');
     this.overlay = document.getElementById('overlay');
     this.teleportBtn = document.getElementById('teleportBtn');
-    this.dpad = document.getElementById('dpad');
     this.levelTxt = document.getElementById('levelTxt');
     this.timeTxt = document.getElementById('timeTxt');
     this.livesEl = document.getElementById('lives');
@@ -40,7 +39,6 @@ export class LaberinOjoGame {
     this.running = false;
     this.elapsed = 0;
     this.stepCooldownUntil = 0;
-    this.lastDpadPressAt = 0;
 
     this.bindEvents();
     this.resize();
@@ -72,13 +70,6 @@ export class LaberinOjoGame {
       this.teleportBtn.addEventListener('touchstart', e => this.onTeleportPress(e), { passive:false });
       this.teleportBtn.addEventListener('mousedown', e => this.onTeleportPress(e));
     }
-
-    this.dpad?.querySelectorAll('.dpadBtn').forEach(btn => {
-      const press = e => this.onDpadPress(e, btn);
-      btn.addEventListener('pointerdown', press);
-      btn.addEventListener('touchstart', press, { passive:false });
-      btn.addEventListener('mousedown', press);
-    });
 
     window.addEventListener('resize', () => this.recenterAfterResize());
     window.addEventListener('orientationchange', () => setTimeout(() => this.recenterAfterResize(), 120));
@@ -192,10 +183,6 @@ export class LaberinOjoGame {
     }
   }
 
-  dirFromName(name){
-    return { up:{x:0,y:-1}, down:{x:0,y:1}, left:{x:-1,y:0}, right:{x:1,y:0} }[name] || {x:0,y:0};
-  }
-
   dominant(dx, dy){
     if(Math.hypot(dx, dy) < 18) return {x:0,y:0};
     return Math.abs(dx) > Math.abs(dy) ? {x:Math.sign(dx), y:0} : {x:0, y:Math.sign(dy)};
@@ -277,19 +264,6 @@ export class LaberinOjoGame {
 
     this.checkGoal();
     return true;
-  }
-
-  onDpadPress(e, btn){
-    e.preventDefault();
-    e.stopPropagation();
-    const now = performance.now();
-    if(now - this.lastDpadPressAt < 45) return;
-    this.lastDpadPressAt = now;
-    this.startGameIfNeeded();
-    const dir = this.dirFromName(btn.dataset.dir);
-    this.dpad?.querySelectorAll('.dpadBtn').forEach(b => b.classList.remove('pressed'));
-    btn.classList.add('pressed');
-    this.stepMove(dir);
   }
 
   onDown(e){
@@ -525,19 +499,61 @@ export class LaberinOjoGame {
     const ctx = this.ctx;
     const dx = this.input.x - this.input.sx;
     const dy = this.input.y - this.input.sy;
-    const a = Math.min(1, Math.hypot(dx, dy) / 80);
+    const strength = Math.min(1, Math.hypot(dx, dy) / 80);
+    const dir = this.dominant(dx, dy);
+    const active = dir.x ? (dir.x > 0 ? 'right' : 'left') : dir.y ? (dir.y > 0 ? 'down' : 'up') : '';
+    const gap = 13;
+    const armWidth = 15;
+    const armHeight = 26;
+
     ctx.save();
-    ctx.globalAlpha = .22;
-    ctx.strokeStyle = '#cfefff';
-    ctx.lineWidth = 2;
+    ctx.translate(this.input.sx, this.input.sy);
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 1.35;
+    ctx.strokeStyle = `rgba(255,216,77,${.34 + .18 * strength})`;
+    ctx.fillStyle = 'rgba(255,216,77,.045)';
+    ctx.shadowColor = 'rgba(255,216,77,.28)';
+    ctx.shadowBlur = 10;
+
+    this.drawJoystickArm(-armWidth / 2, -gap - armHeight, armWidth, armHeight, active === 'up');
+    this.drawJoystickArm(-armWidth / 2, gap, armWidth, armHeight, active === 'down');
+    this.drawJoystickArm(-gap - armHeight, -armWidth / 2, armHeight, armWidth, active === 'left');
+    this.drawJoystickArm(gap, -armWidth / 2, armHeight, armWidth, active === 'right');
+
+    ctx.globalAlpha = .48 + .24 * strength;
+    ctx.strokeStyle = 'rgba(255,216,77,.7)';
+    ctx.fillStyle = 'rgba(255,216,77,.08)';
     ctx.beginPath();
-    ctx.arc(this.input.sx, this.input.sy, 80, 0, Math.PI * 2);
+    ctx.moveTo(-5, 0);
+    ctx.lineTo(5, 0);
+    ctx.moveTo(0, -5);
+    ctx.lineTo(0, 5);
     ctx.stroke();
-    ctx.globalAlpha = .32 + .25 * a;
-    ctx.fillStyle = '#ffd84d';
-    ctx.beginPath();
-    ctx.arc(this.input.x, this.input.y, 18, 0, Math.PI * 2);
+
+    if(strength > .18){
+      ctx.globalAlpha = .28 + .22 * strength;
+      ctx.strokeStyle = 'rgba(255,216,77,.75)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(dx * .42, dy * .42);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  drawJoystickArm(x, y, w, h, active){
+    const ctx = this.ctx;
+    ctx.save();
+    if(active){
+      ctx.fillStyle = 'rgba(255,216,77,.14)';
+      ctx.strokeStyle = 'rgba(255,216,77,.82)';
+      ctx.shadowBlur = 14;
+    }
+    this.roundRect(x, y, w, h, 5);
     ctx.fill();
+    ctx.stroke();
     ctx.restore();
   }
 

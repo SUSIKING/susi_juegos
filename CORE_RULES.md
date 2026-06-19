@@ -124,7 +124,9 @@ laberinOjoBest
 
 ## 10. Cambios de control
 
-Si el joystick invisible falla en WebViews, debe existir fallback visible, actualmente la cruceta táctil.
+El control principal es el joystick por arrastre.
+
+Durante el arrastre debe existir feedback visible, actualmente una cruceta proyectada sutil.
 
 ## 11. Regla de honestidad técnica
 

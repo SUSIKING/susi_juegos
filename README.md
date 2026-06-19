@@ -9,7 +9,7 @@ Controlas un ojo circular dentro de laberintos ortogonales estáticos. El objeti
 ## Versión actual
 
 ```text
-v0.0.1.3 · 2026-06-18 21:48 CLT
+v0.0.1.4 · 2026-06-18 21:54 CLT
 ```
 
 ## Regla obligatoria de versionado
@@ -50,7 +50,7 @@ El script actualiza:
 - Movimiento lógico por grilla: cada input mueve el ojo a una celda vecina válida.
 - Render suavizado: el ojo interpola visualmente entre centros de celda para recuperar fluidez.
 - Joystick/arrastre traducido a pasos por dirección.
-- Cruceta táctil fija para compatibilidad con WebViews como Instagram.
+- Cruceta proyectada sutil durante el arrastre como feedback direccional.
 - Laberintos infinitos generados por semilla determinística.
 - Dificultad creciente por tamaño, complejidad y penalización.
 - 5 vidas por intento.
@@ -95,7 +95,7 @@ susi_juegos/
 |---|---|
 | `CORE_RULES.md` | Reglas obligatorias del proyecto. |
 | `index.html` | Entrada principal para GitHub Pages. |
-| `css/styles.css` | Estética visual, HUD, overlay, cruceta, botón rojo y layout mobile-first. |
+| `css/styles.css` | Estética visual, HUD, overlay, botón rojo y layout mobile-first. |
 | `js/main.js` | Bootstrap del juego. |
 | `js/game.js` | Motor principal: input, movimiento por grilla, interpolación visual, daño, HUD, render y teletransporte. |
 | `js/maze.js` | Generación de laberintos por semilla. |
@@ -108,8 +108,8 @@ susi_juegos/
 
 1. Abre `index.html` o la URL publicada en GitHub Pages.
 2. Toca la pantalla para comenzar.
-3. Usa una flecha de la cruceta para mover una celda.
-4. También puedes arrastrar en cualquier dirección para avanzar por pasos.
+3. Arrastra en cualquier dirección para avanzar por pasos.
+4. Usa la cruceta proyectada como referencia visual del gesto.
 5. Usa el botón rojo si necesitas un teletransporte corto de emergencia.
 6. Llega al portal amarillo.
 7. Intenta reducir tu tiempo final.

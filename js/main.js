@@ -1,4 +1,4 @@
-import { LaberinOjoGame } from './game.js?v=013';
+import { LaberinOjoGame } from './game.js?v=014';
 
 window.addEventListener('DOMContentLoaded', () => {
   new LaberinOjoGame();
