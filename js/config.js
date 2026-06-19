@@ -1,5 +1,5 @@
-export const APP_VERSION = 'v0.0.2.0';
-export const BUILD_TIMESTAMP_CL = '2026-06-18 22:38 CLT';
+export const APP_VERSION = 'v0.0.2.1';
+export const BUILD_TIMESTAMP_CL = '2026-06-18 22:43 CLT';
 
 export const WALL = 0;
 export const PATH = 1;
@@ -22,16 +22,17 @@ export const STORAGE_KEYS = {
 };
 
 export function levelParams(level){
-  const complexity = 1 - Math.exp(-level / 12);
+  const ramp = Math.max(0, level - 1);
+  const complexity = 1 - Math.exp(-ramp / 10);
   return {
     complexity,
     seed: level * 99991 + 1337,
-    cols: makeOdd(11 + 2 * Math.floor(Math.sqrt(level))),
-    rows: makeOdd(15 + 2 * Math.floor(1.2 * Math.sqrt(level))),
-    loopRate: 0.02 + 0.12 * complexity,
+    cols: makeOdd(7 + 2 * Math.floor(Math.sqrt(ramp))),
+    rows: makeOdd(9 + 2 * Math.floor(1.15 * Math.sqrt(ramp))),
+    loopRate: 0.04 + 0.12 * complexity,
     speedMin: 55,
     speedMax: 165 + 55 * complexity,
-    wallPenalty: 0.75 + 0.35 * complexity
+    wallPenalty: 0.45 + 0.45 * complexity
   };
 }
 

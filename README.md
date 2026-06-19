@@ -9,7 +9,7 @@ Controlas un ojo circular dentro de laberintos ortogonales estáticos. El objeti
 ## Versión actual
 
 ```text
-v0.0.2.0 · 2026-06-18 22:38 CLT
+v0.0.2.1 · 2026-06-18 22:43 CLT
 ```
 
 ## Regla obligatoria de versionado
@@ -53,7 +53,7 @@ El script actualiza:
 - Velocidad base moderada con aceleración progresiva mientras se mantiene el arrastre.
 - Cruceta proyectada sutil durante el arrastre como feedback direccional.
 - Laberintos infinitos generados por semilla determinística.
-- Dificultad creciente por tamaño, complejidad y penalización.
+- Dificultad inicial reducida y crecimiento gradual por tamaño, complejidad y penalización.
 - 5 vidas por intento.
 - Intentar moverse contra pared resta vida y suma penalización de tiempo.
 - Al morir, el nivel se reinicia y las vidas se recuperan.
