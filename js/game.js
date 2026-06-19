@@ -8,10 +8,13 @@ import {
   PLAYER_MOVE_DURATION_MIN_MS,
   PLAYER_MOVE_DURATION_MAX_MS,
   PLAYER_STEP_COOLDOWN_MS,
+  PLAYER_MOVE_ACCEL_PER_STEP,
+  PLAYER_MOVE_ACCEL_STEPS,
+  PLAYER_MOVE_ACCEL_RESET_MS,
   clamp
-} from './config.js?v=014';
-import { buildMaze } from './maze.js?v=014';
-import { AudioEngine } from './audio.js?v=014';
+} from './config.js?v=015';
+import { buildMaze } from './maze.js?v=015';
+import { AudioEngine } from './audio.js?v=015';
 
 export class LaberinOjoGame {
   constructor(){
@@ -39,6 +42,7 @@ export class LaberinOjoGame {
     this.running = false;
     this.elapsed = 0;
     this.stepCooldownUntil = 0;
+    this.moveStreak = { steps:0, lastAt:0 };
 
     this.bindEvents();
     this.resize();
@@ -163,6 +167,7 @@ export class LaberinOjoGame {
     this.startMs = performance.now();
     this.elapsed = 0;
     this.running = true;
+    this.resetMoveStreak();
     this.updateHud();
   }
 
@@ -198,14 +203,31 @@ export class LaberinOjoGame {
     this.player.dir = dir;
   }
 
-  moveDuration(fromX, fromY, toX, toY){
+  moveDuration(fromX, fromY, toX, toY, speedMultiplier = 1){
     const distance = Math.hypot(toX - fromX, toY - fromY);
-    const speed = Math.max(1, this.cell * PLAYER_MOVE_CELLS_PER_SECOND);
+    const speed = Math.max(1, this.cell * PLAYER_MOVE_CELLS_PER_SECOND * speedMultiplier);
     return clamp(
       distance / speed * 1000,
       PLAYER_MOVE_DURATION_MIN_MS,
       PLAYER_MOVE_DURATION_MAX_MS
     );
+  }
+
+  moveSpeedMultiplier(now){
+    const isContinuous = this.input?.active && now - this.moveStreak.lastAt <= PLAYER_MOVE_ACCEL_RESET_MS;
+    const steps = isContinuous ? this.moveStreak.steps : 0;
+    return 1 + Math.min(steps, PLAYER_MOVE_ACCEL_STEPS) * PLAYER_MOVE_ACCEL_PER_STEP;
+  }
+
+  markMoveStep(now){
+    const isContinuous = this.input?.active && now - this.moveStreak.lastAt <= PLAYER_MOVE_ACCEL_RESET_MS;
+    this.moveStreak.steps = isContinuous ? this.moveStreak.steps + 1 : 1;
+    this.moveStreak.lastAt = now;
+  }
+
+  resetMoveStreak(){
+    this.moveStreak.steps = 0;
+    this.moveStreak.lastAt = 0;
   }
 
   easeMove(t){
@@ -243,6 +265,7 @@ export class LaberinOjoGame {
     const ny = this.player.cellY + dir.y;
 
     if(!this.isPathCell(nx, ny)){
+      this.resetMoveStreak();
       this.damage(now);
       return false;
     }
@@ -251,7 +274,7 @@ export class LaberinOjoGame {
     this.player.cellY = ny;
     const c = this.cellCenter({x:nx, y:ny});
     this.updatePlayerVisual(now);
-    const duration = this.moveDuration(this.player.renderX, this.player.renderY, c.x, c.y);
+    const duration = this.moveDuration(this.player.renderX, this.player.renderY, c.x, c.y, this.moveSpeedMultiplier(now));
     this.player.x = c.x;
     this.player.y = c.y;
     this.player.moveFromX = this.player.renderX;
@@ -261,6 +284,7 @@ export class LaberinOjoGame {
     this.player.moveStartMs = now;
     this.player.moveDurationMs = duration;
     this.stepCooldownUntil = now + Math.max(PLAYER_STEP_COOLDOWN_MS, duration * .72);
+    this.markMoveStep(now);
 
     this.checkGoal();
     return true;
@@ -276,6 +300,7 @@ export class LaberinOjoGame {
     this.input.sy = t.clientY;
     this.input.x = t.clientX;
     this.input.y = t.clientY;
+    this.resetMoveStreak();
   }
 
   onMove(e){
@@ -298,6 +323,7 @@ export class LaberinOjoGame {
     e.preventDefault();
     this.input.active = false;
     this.input.mode = 'none';
+    this.resetMoveStreak();
   }
 
   onTeleportPress(e){

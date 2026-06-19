@@ -9,7 +9,7 @@ Controlas un ojo circular dentro de laberintos ortogonales estáticos. El objeti
 ## Versión actual
 
 ```text
-v0.0.1.4 · 2026-06-18 21:54 CLT
+v0.0.1.5 · 2026-06-18 22:04 CLT
 ```
 
 ## Regla obligatoria de versionado
@@ -50,6 +50,7 @@ El script actualiza:
 - Movimiento lógico por grilla: cada input mueve el ojo a una celda vecina válida.
 - Render suavizado: el ojo interpola visualmente entre centros de celda para recuperar fluidez.
 - Joystick/arrastre traducido a pasos por dirección.
+- Velocidad base moderada con aceleración progresiva durante arrastres continuos.
 - Cruceta proyectada sutil durante el arrastre como feedback direccional.
 - Laberintos infinitos generados por semilla determinística.
 - Dificultad creciente por tamaño, complejidad y penalización.
