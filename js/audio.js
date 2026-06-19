@@ -5,7 +5,7 @@ import {
   MUSIC_LOOKAHEAD_SEC,
   MUSIC_SCHEDULE_INTERVAL_MS,
   MUSIC_START_DELAY_SEC
-} from './config.js?v=017';
+} from './config.js?v=018';
 
 export class AudioEngine {
   constructor(){
@@ -15,6 +15,7 @@ export class AudioEngine {
     this.step = 0;
     this.timer = null;
     this.started = false;
+    this.unlockArmed = false;
   }
 
   async start(){
@@ -30,6 +31,7 @@ export class AudioEngine {
     }
 
     if(this.ctx.state === 'suspended'){
+      this.armUnlock();
       try { await this.ctx.resume(); } catch (err) {}
     }
 
@@ -38,9 +40,9 @@ export class AudioEngine {
     if(!this.started){
       this.started = true;
       this.next = this.ctx.currentTime + MUSIC_START_DELAY_SEC;
+      this.downbeat(this.next);
       this.scheduleMusic();
       this.timer = setInterval(() => this.scheduleMusic(), MUSIC_SCHEDULE_INTERVAL_MS);
-      this.beep(420, 0.035, 'sine', 0.025);
       return;
     }
 
@@ -48,6 +50,26 @@ export class AudioEngine {
       this.next = this.ctx.currentTime + MUSIC_START_DELAY_SEC;
     }
     this.scheduleMusic();
+  }
+
+  armUnlock(){
+    if(this.unlockArmed || typeof window === 'undefined') return;
+    this.unlockArmed = true;
+    const unlock = () => {
+      this.unlockArmed = false;
+      this.start();
+      window.removeEventListener('pointerdown', unlock, true);
+      window.removeEventListener('touchstart', unlock, true);
+      window.removeEventListener('keydown', unlock, true);
+    };
+    window.addEventListener('pointerdown', unlock, true);
+    window.addEventListener('touchstart', unlock, true);
+    window.addEventListener('keydown', unlock, true);
+  }
+
+  downbeat(t){
+    [38, 50, 62].forEach((m, i) => this.note(m + MUSIC_TRANSPOSE, t + i * 0.01, 0.22, i === 0 ? 'triangle' : 'square', i === 0 ? 0.2 : 0.075));
+    this.beep(520, 0.045, 'sine', 0.035);
   }
 
   beep(freq, duration, type = 'sine', gain = 0.04){
