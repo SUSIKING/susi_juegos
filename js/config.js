@@ -1,5 +1,5 @@
-export const APP_VERSION = 'v0.0.1.5';
-export const BUILD_TIMESTAMP_CL = '2026-06-18 22:04 CLT';
+export const APP_VERSION = 'v0.0.1.6';
+export const BUILD_TIMESTAMP_CL = '2026-06-18 22:12 CLT';
 
 export const WALL = 0;
 export const PATH = 1;
@@ -10,13 +10,11 @@ export const MUSIC_TRANSPOSE = -6;
 export const MUSIC_LOOKAHEAD_SEC = 0.65;
 export const MUSIC_SCHEDULE_INTERVAL_MS = 60;
 export const MUSIC_START_DELAY_SEC = 0.02;
-export const PLAYER_MOVE_CELLS_PER_SECOND = 4.4;
-export const PLAYER_MOVE_DURATION_MIN_MS = 130;
-export const PLAYER_MOVE_DURATION_MAX_MS = 260;
-export const PLAYER_STEP_COOLDOWN_MS = 130;
-export const PLAYER_MOVE_ACCEL_PER_STEP = 0.12;
-export const PLAYER_MOVE_ACCEL_STEPS = 6;
-export const PLAYER_MOVE_ACCEL_RESET_MS = 520;
+export const PLAYER_BASE_SPEED_CELLS_PER_SECOND = 2.6;
+export const PLAYER_MAX_SPEED_CELLS_PER_SECOND = 5.4;
+export const PLAYER_ACCEL_CELLS_PER_SECOND = 7.2;
+export const PLAYER_LANE_CORRECTION_CELLS_PER_SECOND = 7.5;
+export const PLAYER_COLLISION_RADIUS_SCALE = 0.26;
 
 export const STORAGE_KEYS = {
   level: 'laberinOjoLevel',

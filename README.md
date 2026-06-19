@@ -9,7 +9,7 @@ Controlas un ojo circular dentro de laberintos ortogonales estáticos. El objeti
 ## Versión actual
 
 ```text
-v0.0.1.5 · 2026-06-18 22:04 CLT
+v0.0.1.6 · 2026-06-18 22:12 CLT
 ```
 
 ## Regla obligatoria de versionado
@@ -47,10 +47,10 @@ El script actualiza:
 
 ## Mecánicas actuales
 
-- Movimiento lógico por grilla: cada input mueve el ojo a una celda vecina válida.
-- Render suavizado: el ojo interpola visualmente entre centros de celda para recuperar fluidez.
-- Joystick/arrastre traducido a pasos por dirección.
-- Velocidad base moderada con aceleración progresiva durante arrastres continuos.
+- Movimiento continuo por píxeles con colisión contra muros del laberinto.
+- Alineación suave al carril del laberinto para sostener giros limpios.
+- Joystick/arrastre traducido a dirección sostenida.
+- Velocidad base moderada con aceleración progresiva mientras se mantiene el arrastre.
 - Cruceta proyectada sutil durante el arrastre como feedback direccional.
 - Laberintos infinitos generados por semilla determinística.
 - Dificultad creciente por tamaño, complejidad y penalización.
@@ -109,7 +109,7 @@ susi_juegos/
 
 1. Abre `index.html` o la URL publicada en GitHub Pages.
 2. Toca la pantalla para comenzar.
-3. Arrastra en cualquier dirección para avanzar por pasos.
+3. Arrastra en cualquier dirección para moverte de forma continua.
 4. Usa la cruceta proyectada como referencia visual del gesto.
 5. Usa el botón rojo si necesitas un teletransporte corto de emergencia.
 6. Llega al portal amarillo.
