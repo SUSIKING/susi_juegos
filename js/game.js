@@ -1,6 +1,17 @@
-import { APP_VERSION, BUILD_TIMESTAMP_CL, WALL, PATH, STORAGE_KEYS, clamp } from './config.js?v=012';
-import { buildMaze } from './maze.js?v=012';
-import { AudioEngine } from './audio.js?v=012';
+import {
+  APP_VERSION,
+  BUILD_TIMESTAMP_CL,
+  WALL,
+  PATH,
+  STORAGE_KEYS,
+  PLAYER_MOVE_CELLS_PER_SECOND,
+  PLAYER_MOVE_DURATION_MIN_MS,
+  PLAYER_MOVE_DURATION_MAX_MS,
+  PLAYER_STEP_COOLDOWN_MS,
+  clamp
+} from './config.js?v=013';
+import { buildMaze } from './maze.js?v=013';
+import { AudioEngine } from './audio.js?v=013';
 
 export class LaberinOjoGame {
   constructor(){
@@ -29,6 +40,7 @@ export class LaberinOjoGame {
     this.running = false;
     this.elapsed = 0;
     this.stepCooldownUntil = 0;
+    this.lastDpadPressAt = 0;
 
     this.bindEvents();
     this.resize();
@@ -103,8 +115,12 @@ export class LaberinOjoGame {
     this.player.y = center.y;
     this.player.renderX = center.x;
     this.player.renderY = center.y;
+    this.player.moveFromX = center.x;
+    this.player.moveFromY = center.y;
     this.player.targetX = center.x;
     this.player.targetY = center.y;
+    this.player.moveStartMs = performance.now();
+    this.player.moveDurationMs = 1;
     this.player.r = this.cell * .32;
   }
 
@@ -136,8 +152,12 @@ export class LaberinOjoGame {
       y:start.y,
       renderX:start.x,
       renderY:start.y,
+      moveFromX:start.x,
+      moveFromY:start.y,
       targetX:start.x,
       targetY:start.y,
+      moveStartMs:0,
+      moveDurationMs:1,
       r:this.cell * .32,
       dir:{x:0,y:0},
       wanted:{x:0,y:0},
@@ -191,12 +211,44 @@ export class LaberinOjoGame {
     this.player.dir = dir;
   }
 
-  stepMove(dir, force = false){
+  moveDuration(fromX, fromY, toX, toY){
+    const distance = Math.hypot(toX - fromX, toY - fromY);
+    const speed = Math.max(1, this.cell * PLAYER_MOVE_CELLS_PER_SECOND);
+    return clamp(
+      distance / speed * 1000,
+      PLAYER_MOVE_DURATION_MIN_MS,
+      PLAYER_MOVE_DURATION_MAX_MS
+    );
+  }
+
+  easeMove(t){
+    const p = clamp(t, 0, 1);
+    return p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+  }
+
+  updatePlayerVisual(now){
+    if(!this.player) return;
+    const progress = clamp((now - this.player.moveStartMs) / this.player.moveDurationMs, 0, 1);
+    const eased = this.easeMove(progress);
+    this.player.renderX = this.player.moveFromX + (this.player.targetX - this.player.moveFromX) * eased;
+    this.player.renderY = this.player.moveFromY + (this.player.targetY - this.player.moveFromY) * eased;
+
+    if(progress >= 1){
+      this.player.renderX = this.player.targetX;
+      this.player.renderY = this.player.targetY;
+      this.player.moveFromX = this.player.targetX;
+      this.player.moveFromY = this.player.targetY;
+    }
+  }
+
+  stepMove(dir){
     if(!this.running || !this.player || (!dir.x && !dir.y)) return false;
 
     const now = performance.now();
-    if(!force && now < this.stepCooldownUntil) return false;
-    this.stepCooldownUntil = now + 105;
+    if(now < this.stepCooldownUntil){
+      this.setLook(dir);
+      return false;
+    }
 
     this.setLook(dir);
 
@@ -211,10 +263,17 @@ export class LaberinOjoGame {
     this.player.cellX = nx;
     this.player.cellY = ny;
     const c = this.cellCenter({x:nx, y:ny});
+    this.updatePlayerVisual(now);
+    const duration = this.moveDuration(this.player.renderX, this.player.renderY, c.x, c.y);
     this.player.x = c.x;
     this.player.y = c.y;
+    this.player.moveFromX = this.player.renderX;
+    this.player.moveFromY = this.player.renderY;
     this.player.targetX = c.x;
     this.player.targetY = c.y;
+    this.player.moveStartMs = now;
+    this.player.moveDurationMs = duration;
+    this.stepCooldownUntil = now + Math.max(PLAYER_STEP_COOLDOWN_MS, duration * .72);
 
     this.checkGoal();
     return true;
@@ -223,11 +282,14 @@ export class LaberinOjoGame {
   onDpadPress(e, btn){
     e.preventDefault();
     e.stopPropagation();
+    const now = performance.now();
+    if(now - this.lastDpadPressAt < 45) return;
+    this.lastDpadPressAt = now;
     this.startGameIfNeeded();
     const dir = this.dirFromName(btn.dataset.dir);
     this.dpad?.querySelectorAll('.dpadBtn').forEach(b => b.classList.remove('pressed'));
     btn.classList.add('pressed');
-    this.stepMove(dir, true);
+    this.stepMove(dir);
   }
 
   onDown(e){
@@ -299,8 +361,12 @@ export class LaberinOjoGame {
     this.player.y = c.y;
     this.player.renderX = c.x;
     this.player.renderY = c.y;
+    this.player.moveFromX = c.x;
+    this.player.moveFromY = c.y;
     this.player.targetX = c.x;
     this.player.targetY = c.y;
+    this.player.moveStartMs = performance.now();
+    this.player.moveDurationMs = 1;
     this.player.teleportUntil = performance.now() + 280;
     this.audio.beep(660, .05, 'square', .04);
     this.checkGoal();
@@ -331,13 +397,7 @@ export class LaberinOjoGame {
   update(dt, now){
     if(!this.running) return;
     this.elapsed = (now - this.startMs) / 1000;
-
-    const k = 1 - Math.pow(0.001, dt * 14);
-    this.player.renderX += (this.player.targetX - this.player.renderX) * k;
-    this.player.renderY += (this.player.targetY - this.player.renderY) * k;
-
-    if(Math.abs(this.player.targetX - this.player.renderX) < 0.3) this.player.renderX = this.player.targetX;
-    if(Math.abs(this.player.targetY - this.player.renderY) < 0.3) this.player.renderY = this.player.targetY;
+    this.updatePlayerVisual(now);
 
     this.updateHud();
   }

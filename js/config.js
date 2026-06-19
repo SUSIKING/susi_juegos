@@ -1,5 +1,5 @@
-export const APP_VERSION = 'v0.0.1.2';
-export const BUILD_TIMESTAMP_CL = '2026-06-17 22:59 CLT';
+export const APP_VERSION = 'v0.0.1.3';
+export const BUILD_TIMESTAMP_CL = '2026-06-18 21:48 CLT';
 
 export const WALL = 0;
 export const PATH = 1;
@@ -10,6 +10,10 @@ export const MUSIC_TRANSPOSE = -6;
 export const MUSIC_LOOKAHEAD_SEC = 0.65;
 export const MUSIC_SCHEDULE_INTERVAL_MS = 60;
 export const MUSIC_START_DELAY_SEC = 0.02;
+export const PLAYER_MOVE_CELLS_PER_SECOND = 8.8;
+export const PLAYER_MOVE_DURATION_MIN_MS = 96;
+export const PLAYER_MOVE_DURATION_MAX_MS = 155;
+export const PLAYER_STEP_COOLDOWN_MS = 88;
 
 export const STORAGE_KEYS = {
   level: 'laberinOjoLevel',
@@ -21,8 +25,8 @@ export function levelParams(level){
   return {
     complexity,
     seed: level * 99991 + 1337,
-    cols: makeOdd(9 + 2 * Math.floor(Math.sqrt(level))),
-    rows: makeOdd(13 + 2 * Math.floor(1.2 * Math.sqrt(level))),
+    cols: makeOdd(11 + 2 * Math.floor(Math.sqrt(level))),
+    rows: makeOdd(15 + 2 * Math.floor(1.2 * Math.sqrt(level))),
     loopRate: 0.02 + 0.12 * complexity,
     speedMin: 55,
     speedMax: 165 + 55 * complexity,
