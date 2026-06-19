@@ -5,7 +5,7 @@ import {
   MUSIC_LOOKAHEAD_SEC,
   MUSIC_SCHEDULE_INTERVAL_MS,
   MUSIC_START_DELAY_SEC
-} from './config.js?v=019';
+} from './config.js?v=020';
 
 export class AudioEngine {
   constructor(){
@@ -70,6 +70,14 @@ export class AudioEngine {
   downbeat(t){
     [38, 50, 62].forEach((m, i) => this.note(m + MUSIC_TRANSPOSE, t + i * 0.01, 0.22, i === 0 ? 'triangle' : 'square', i === 0 ? 0.2 : 0.075));
     this.beep(520, 0.045, 'sine', 0.035);
+  }
+
+  async startCue(){
+    await this.start();
+    if(!this.ctx || this.ctx.state !== 'running') return;
+    const t = this.ctx.currentTime + MUSIC_START_DELAY_SEC;
+    this.downbeat(t);
+    this.beep(760, 0.075, 'square', 0.055);
   }
 
   beep(freq, duration, type = 'sine', gain = 0.04){

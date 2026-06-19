@@ -10,9 +10,9 @@ import {
   PLAYER_LANE_CORRECTION_CELLS_PER_SECOND,
   PLAYER_COLLISION_RADIUS_SCALE,
   clamp
-} from './config.js?v=019';
-import { buildMaze } from './maze.js?v=019';
-import { AudioEngine } from './audio.js?v=019';
+} from './config.js?v=020';
+import { buildMaze } from './maze.js?v=020';
+import { AudioEngine } from './audio.js?v=020';
 
 export class LaberinOjoGame {
   constructor(){
@@ -20,6 +20,7 @@ export class LaberinOjoGame {
     this.ctx = this.canvas.getContext('2d');
     this.stage = document.getElementById('stage');
     this.overlay = document.getElementById('overlay');
+    this.startBtn = document.getElementById('startBtn');
     this.teleportBtn = document.getElementById('teleportBtn');
     this.levelTxt = document.getElementById('levelTxt');
     this.timeTxt = document.getElementById('timeTxt');
@@ -40,6 +41,7 @@ export class LaberinOjoGame {
     this.lastT = performance.now();
     this.running = false;
     this.elapsed = 0;
+    this.lastStartPressAt = 0;
 
     this.bindEvents();
     this.resize();
@@ -59,9 +61,11 @@ export class LaberinOjoGame {
     document.addEventListener('pointerdown', primeAudio, true);
     document.addEventListener('touchstart', primeAudio, true);
     document.addEventListener('keydown', primeAudio, true);
+    this.startBtn.addEventListener('click', e => this.onStartButton(e));
 
     if(window.PointerEvent){
       this.overlay.addEventListener('pointerdown', primeAudio, true);
+      this.startBtn.addEventListener('pointerdown', e => this.onStartButton(e));
       this.stage.addEventListener('pointerdown', down);
       this.stage.addEventListener('pointermove', move);
       this.stage.addEventListener('pointerup', up);
@@ -70,6 +74,8 @@ export class LaberinOjoGame {
     } else {
       this.overlay.addEventListener('touchstart', primeAudio, { passive:false, capture:true });
       this.overlay.addEventListener('mousedown', primeAudio, true);
+      this.startBtn.addEventListener('touchstart', e => this.onStartButton(e), { passive:false });
+      this.startBtn.addEventListener('mousedown', e => this.onStartButton(e));
       this.stage.addEventListener('touchstart', down, { passive:false });
       this.stage.addEventListener('touchmove', move, { passive:false });
       this.stage.addEventListener('touchend', up, { passive:false });
@@ -180,6 +186,16 @@ export class LaberinOjoGame {
       this.newLevel(this.level);
       this.recenterAfterResize();
     }
+  }
+
+  onStartButton(e){
+    e.preventDefault();
+    e.stopPropagation();
+    const now = performance.now();
+    if(now - this.lastStartPressAt < 180) return;
+    this.lastStartPressAt = now;
+    this.audio.startCue();
+    this.startGameIfNeeded();
   }
 
   dominant(dx, dy){
