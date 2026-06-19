@@ -10,9 +10,9 @@ import {
   PLAYER_LANE_CORRECTION_CELLS_PER_SECOND,
   PLAYER_COLLISION_RADIUS_SCALE,
   clamp
-} from './config.js?v=021';
-import { buildMaze } from './maze.js?v=021';
-import { AudioEngine } from './audio.js?v=021';
+} from './config.js?v=022';
+import { buildMaze } from './maze.js?v=022';
+import { AudioEngine } from './audio.js?v=022';
 
 export class LaberinOjoGame {
   constructor(){
@@ -21,6 +21,7 @@ export class LaberinOjoGame {
     this.stage = document.getElementById('stage');
     this.overlay = document.getElementById('overlay');
     this.startBtn = document.getElementById('startBtn');
+    this.audioBtn = document.getElementById('audioBtn');
     this.teleportBtn = document.getElementById('teleportBtn');
     this.levelTxt = document.getElementById('levelTxt');
     this.timeTxt = document.getElementById('timeTxt');
@@ -42,6 +43,7 @@ export class LaberinOjoGame {
     this.running = false;
     this.elapsed = 0;
     this.lastStartPressAt = 0;
+    this.lastAudioPressAt = 0;
 
     this.bindEvents();
     this.resize();
@@ -62,10 +64,12 @@ export class LaberinOjoGame {
     document.addEventListener('touchstart', primeAudio, true);
     document.addEventListener('keydown', primeAudio, true);
     this.startBtn.addEventListener('click', e => this.onStartButton(e));
+    this.audioBtn.addEventListener('click', e => this.onAudioButton(e));
 
     if(window.PointerEvent){
       this.overlay.addEventListener('pointerdown', primeAudio, true);
       this.startBtn.addEventListener('pointerdown', e => this.onStartButton(e));
+      this.audioBtn.addEventListener('pointerdown', e => this.onAudioButton(e));
       this.stage.addEventListener('pointerdown', down);
       this.stage.addEventListener('pointermove', move);
       this.stage.addEventListener('pointerup', up);
@@ -76,6 +80,8 @@ export class LaberinOjoGame {
       this.overlay.addEventListener('mousedown', primeAudio, true);
       this.startBtn.addEventListener('touchstart', e => this.onStartButton(e), { passive:false });
       this.startBtn.addEventListener('mousedown', e => this.onStartButton(e));
+      this.audioBtn.addEventListener('touchstart', e => this.onAudioButton(e), { passive:false });
+      this.audioBtn.addEventListener('mousedown', e => this.onAudioButton(e));
       this.stage.addEventListener('touchstart', down, { passive:false });
       this.stage.addEventListener('touchmove', move, { passive:false });
       this.stage.addEventListener('touchend', up, { passive:false });
@@ -196,6 +202,20 @@ export class LaberinOjoGame {
     this.lastStartPressAt = now;
     this.audio.startCue();
     this.startGameIfNeeded();
+  }
+
+  onAudioButton(e){
+    e.preventDefault();
+    e.stopPropagation();
+    const now = performance.now();
+    if(now - this.lastAudioPressAt < 180) return;
+    this.lastAudioPressAt = now;
+    this.audio.start();
+    const muted = this.audio.toggleMuted();
+    this.audioBtn.classList.toggle('muted', muted);
+    this.audioBtn.textContent = muted ? '×' : '♪';
+    this.audioBtn.setAttribute('aria-label', muted ? 'Encender audio' : 'Apagar audio');
+    this.audioBtn.setAttribute('aria-pressed', muted ? 'true' : 'false');
   }
 
   dominant(dx, dy){

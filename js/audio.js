@@ -5,7 +5,7 @@ import {
   MUSIC_LOOKAHEAD_SEC,
   MUSIC_SCHEDULE_INTERVAL_MS,
   MUSIC_START_DELAY_SEC
-} from './config.js?v=021';
+} from './config.js?v=022';
 
 export class AudioEngine {
   constructor(){
@@ -16,6 +16,7 @@ export class AudioEngine {
     this.timer = null;
     this.started = false;
     this.unlockArmed = false;
+    this.muted = false;
   }
 
   async start(){
@@ -25,7 +26,7 @@ export class AudioEngine {
     if(!this.ctx){
       this.ctx = new AC();
       this.master = this.ctx.createGain();
-      this.master.gain.value = AUDIO_MASTER_GAIN;
+      this.applyGain();
       this.master.connect(this.ctx.destination);
       this.next = this.ctx.currentTime + MUSIC_START_DELAY_SEC;
     }
@@ -78,6 +79,21 @@ export class AudioEngine {
     const t = this.ctx.currentTime + MUSIC_START_DELAY_SEC;
     this.downbeat(t);
     this.beep(760, 0.075, 'square', 0.055);
+  }
+
+  applyGain(){
+    if(!this.master) return;
+    this.master.gain.value = this.muted ? 0 : AUDIO_MASTER_GAIN;
+  }
+
+  setMuted(muted){
+    this.muted = muted;
+    this.applyGain();
+  }
+
+  toggleMuted(){
+    this.setMuted(!this.muted);
+    return this.muted;
   }
 
   beep(freq, duration, type = 'sine', gain = 0.04){

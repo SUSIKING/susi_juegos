@@ -9,7 +9,7 @@ Controlas un ojo circular dentro de laberintos ortogonales estáticos. El objeti
 ## Versión actual
 
 ```text
-v0.0.2.1 · 2026-06-18 22:43 CLT
+v0.0.2.2 · 2026-06-18 22:52 CLT
 ```
 
 ## Regla obligatoria de versionado
@@ -58,6 +58,7 @@ El script actualiza:
 - Intentar moverse contra pared resta vida y suma penalización de tiempo.
 - Al morir, el nivel se reinicia y las vidas se recuperan.
 - Botón rojo de teletransporte de emergencia.
+- Botón de audio para encender o apagar música y efectos.
 - El teletransporte puede saltar muros si el destino sano cabe dentro del rango.
 - Música procedural simple con Web Audio API, armada al cargar y con cue audible en el botón de inicio.
 - Ciclo musical aproximado: 6.4 segundos a 75 BPM.

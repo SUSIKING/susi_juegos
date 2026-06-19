@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#050716" />
   <title>LaberinOjo</title>
-  <link rel="stylesheet" href="./css/styles.css?v=021" />
+  <link rel="stylesheet" href="./css/styles.css?v=022" />
 </head>
 <body>
 <div id="wrap">
@@ -17,19 +17,20 @@
 
   <main id="stage">
     <canvas id="game"></canvas>
+    <button id="audioBtn" aria-label="Apagar audio" aria-pressed="false">♪</button>
     <button id="teleportBtn" aria-label="Teletransporte de emergencia">✦</button>
     <div id="overlay">
       <div class="card">
         <h1>LaberinOjo</h1>
         <p>Llega a la meta en el menor tiempo posible. Arrastra en cualquier parte para avanzar.</p>
         <p>Chocar paredes debilita el ojo. Tienes 5 vidas por intento.</p>
-        <div id="versionTag" class="versionTag">v0.0.2.1</div>
+        <div id="versionTag" class="versionTag">v0.0.2.2</div>
         <button id="startBtn" class="btn" type="button">Tocar para comenzar</button>
       </div>
     </div>
   </main>
 
-  <footer><div class="pill">Arrastre = paso por dirección · botón rojo = teletransporte</div></footer>
+  <footer><div class="pill">Arrastre = mover · audio abajo izquierda · teletransporte abajo derecha</div></footer>
 </div>
 
 <script>
@@ -38,6 +39,6 @@ try {
   localStorage.removeItem('laberinOjoBest');
 } catch (err) {}
 </script>
-<script type="module" src="./js/main.js?v=021"></script>
+<script type="module" src="./js/main.js?v=022"></script>
 </body>
 </html>
