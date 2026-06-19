@@ -10,9 +10,9 @@ import {
   PLAYER_LANE_CORRECTION_CELLS_PER_SECOND,
   PLAYER_COLLISION_RADIUS_SCALE,
   clamp
-} from './config.js?v=016';
-import { buildMaze } from './maze.js?v=016';
-import { AudioEngine } from './audio.js?v=016';
+} from './config.js?v=017';
+import { buildMaze } from './maze.js?v=017';
+import { AudioEngine } from './audio.js?v=017';
 
 export class LaberinOjoGame {
   constructor(){
@@ -28,6 +28,7 @@ export class LaberinOjoGame {
     this.versionTag.textContent = `${APP_VERSION} · ${BUILD_TIMESTAMP_CL}`;
 
     this.audio = new AudioEngine();
+    this.audio.start();
     this.dpr = 1;
     this.viewW = 0;
     this.viewH = 0;

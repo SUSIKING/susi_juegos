@@ -1,5 +1,5 @@
-export const APP_VERSION = 'v0.0.1.6';
-export const BUILD_TIMESTAMP_CL = '2026-06-18 22:12 CLT';
+export const APP_VERSION = 'v0.0.1.7';
+export const BUILD_TIMESTAMP_CL = '2026-06-18 22:22 CLT';
 
 export const WALL = 0;
 export const PATH = 1;
@@ -10,9 +10,9 @@ export const MUSIC_TRANSPOSE = -6;
 export const MUSIC_LOOKAHEAD_SEC = 0.65;
 export const MUSIC_SCHEDULE_INTERVAL_MS = 60;
 export const MUSIC_START_DELAY_SEC = 0.02;
-export const PLAYER_BASE_SPEED_CELLS_PER_SECOND = 2.6;
-export const PLAYER_MAX_SPEED_CELLS_PER_SECOND = 5.4;
-export const PLAYER_ACCEL_CELLS_PER_SECOND = 7.2;
+export const PLAYER_BASE_SPEED_CELLS_PER_SECOND = 1.3;
+export const PLAYER_MAX_SPEED_CELLS_PER_SECOND = 2.7;
+export const PLAYER_ACCEL_CELLS_PER_SECOND = 3.6;
 export const PLAYER_LANE_CORRECTION_CELLS_PER_SECOND = 7.5;
 export const PLAYER_COLLISION_RADIUS_SCALE = 0.26;
 

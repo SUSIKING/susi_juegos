@@ -9,7 +9,7 @@ Controlas un ojo circular dentro de laberintos ortogonales estáticos. El objeti
 ## Versión actual
 
 ```text
-v0.0.1.6 · 2026-06-18 22:12 CLT
+v0.0.1.7 · 2026-06-18 22:22 CLT
 ```
 
 ## Regla obligatoria de versionado
@@ -59,7 +59,7 @@ El script actualiza:
 - Al morir, el nivel se reinicia y las vidas se recuperan.
 - Botón rojo de teletransporte de emergencia.
 - El teletransporte puede saltar muros si el destino sano cabe dentro del rango.
-- Música procedural simple con Web Audio API, activada por el primer toque.
+- Música procedural simple con Web Audio API, inicializada al cargar y reanudada por gesto si el navegador bloquea autoplay.
 - Ciclo musical aproximado: 6.4 segundos a 75 BPM.
 - Música configurada a 75 BPM y transposición total de -6 semitonos.
 - Inicio musical inmediato: `scheduleMusic()` se llama apenas el `AudioContext` queda running.

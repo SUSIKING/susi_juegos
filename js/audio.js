@@ -5,7 +5,7 @@ import {
   MUSIC_LOOKAHEAD_SEC,
   MUSIC_SCHEDULE_INTERVAL_MS,
   MUSIC_START_DELAY_SEC
-} from './config.js?v=016';
+} from './config.js?v=017';
 
 export class AudioEngine {
   constructor(){
